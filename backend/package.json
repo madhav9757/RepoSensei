@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.js\"",
     "test": "echo \"No tests yet\""
   },
   "keywords": [
@@ -17,16 +18,16 @@
     "Node",
     "Express"
   ],
-  "author": "Your Name",
+  "author": "Madhav",
   "license": "MIT",
   "dependencies": {
-    "@octokit/auth-oauth-app": "^9.0.3",
     "@octokit/rest": "^20.0.0",
     "axios": "^1.6.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0"

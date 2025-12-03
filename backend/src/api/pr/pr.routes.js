@@ -1,9 +1,9 @@
 import express from "express";
-import { getRepoPRs } from "./pr.controller.js";
+import { getRepoPRs, getPRDetails } from "./pr.controller.js";
 
 const router = express.Router();
 
-// Get pull requests of a repo
-router.get("/", getRepoPRs);
+router.get("/:owner/:repo", getRepoPRs);
+router.get("/:owner/:repo/:pull_number", getPRDetails);
 
 export default router;

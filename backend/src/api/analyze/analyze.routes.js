@@ -1,8 +1,9 @@
 import express from "express";
-import { analyzeRepo } from "./analyze.controller.js";
+import { analyzeRepoByUrl, analyzeRepoByOwner } from "./analyze.controller.js";
 
 const router = express.Router();
 
-router.post("/", analyzeRepo);
+router.post("/", analyzeRepoByUrl);
+router.get("/:owner/:repo", analyzeRepoByOwner);
 
-export default router; // ✅ add default export
+export default router;

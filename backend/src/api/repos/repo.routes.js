@@ -1,9 +1,11 @@
 import express from "express";
-import { getUserRepos } from "./repo.controller.js";
+import { getUserRepos, getRepoInfo, getRepoStructure } from "./repo.controller.js";
 
 const router = express.Router();
 
-// Get all repos of a user
 router.get("/", getUserRepos);
+router.get("/:owner/:repo", getRepoInfo);
+router.get("/:owner/:repo/structure", getRepoStructure);
 
 export default router;
+

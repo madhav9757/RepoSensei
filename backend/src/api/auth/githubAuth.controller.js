@@ -10,7 +10,6 @@ export const githubOAuth = async (req, res) => {
   if (!code) return res.status(400).json({ error: "Code is required" });
 
   try {
-    // Exchange code for access token
     const tokenResponse = await axios.post(
       "https://github.com/login/oauth/access_token",
       {
@@ -23,7 +22,6 @@ export const githubOAuth = async (req, res) => {
 
     const accessToken = tokenResponse.data.access_token;
 
-    // Create a JWT token to return to frontend
     const token = jwt.sign({ accessToken }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
