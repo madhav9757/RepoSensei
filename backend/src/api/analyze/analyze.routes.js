@@ -6,4 +6,4 @@ const router = express.Router();
 router.post("/", analyzeRepoByUrl);
 router.get("/:owner/:repo", analyzeRepoByOwner);
 
-export default router;
+export default router; // ✅ add default export

@@ -14,11 +14,11 @@ export default function Repo() {
   useEffect(() => {
     async function loadRepo() {
       try {
-        const treeRes = await api.get(`/repo/${id}/tree`);
-        const sugRes = await api.get(`/suggestions/${id}`);
+        const treeData = await api.get(`/repo/${id}/tree`);
+        const sugData = await api.get(`/suggestions/${id}`);
 
-        setTree(treeRes.data.tree || []);
-        setSuggestions(sugRes.data.suggestions || []);
+        setTree(treeData.tree || []);
+        setSuggestions(sugData.suggestions || []);
       } catch (err) {
         console.error("Failed to fetch repo data:", err);
       } finally {

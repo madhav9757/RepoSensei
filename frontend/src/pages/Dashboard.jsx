@@ -10,8 +10,8 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchRepos() {
       try {
-        const res = await api.get("/repos"); // GET /api/repos
-        setRepos(res.data || []);
+        const data = await api.get("/repos?username=demo-user");
+        setRepos(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to fetch repos:", err);
         setError("Failed to load repositories. Please try again.");
