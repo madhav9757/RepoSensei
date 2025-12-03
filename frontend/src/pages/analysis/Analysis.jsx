@@ -12,8 +12,8 @@ export default function Analysis() {
   useEffect(() => {
     async function fetchAnalysis() {
       try {
-        const res = await api.get(`/analysis/${id}`); // GET /api/analysis/:id
-        setReport(res.data || {});
+        const data = await api.get(`/analysis/${id}`);
+        setReport(data || {});
       } catch (err) {
         console.error("Failed to fetch analysis report:", err);
         setError("Failed to load analysis. Please try again.");

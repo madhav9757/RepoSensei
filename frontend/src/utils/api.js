@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_BACKEND_URL;
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api";
 
 // Create a single api object with get and post methods
 const api = {

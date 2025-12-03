@@ -37,7 +37,9 @@ app.get("/", (req, res) => {
 // ---------------------
 app.use("/api/auth", githubAuthRoutes);
 app.use("/api/repos", repoRoutes);
+app.use("/api/repo", repoRoutes);
 app.use("/api/analyze", analyzeRoutes);
+app.use("/api/analysis", analyzeRoutes);
 app.use("/api/suggestions", suggestionsRoutes);
 app.use("/api/pr", prRoutes);
 
