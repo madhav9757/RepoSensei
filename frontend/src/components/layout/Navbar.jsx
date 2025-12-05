@@ -24,15 +24,20 @@ import {
   Github,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAuth, useTheme } from "@/store/useStore";
+import useStore from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  // Subscribe to individual values instead of using selectors
+  const theme = useStore((state) => state.theme);
+  const toggleTheme = useStore((state) => state.toggleTheme);
+  const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const logout = useStore((state) => state.logout);
 
   // Scroll effect
   useEffect(() => {

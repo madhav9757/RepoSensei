@@ -6,7 +6,7 @@ import Footer from "./components/layout/Footer";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { ToastContainer } from "./components/ui/toast";
 import Loader from "./components/common/SkeletonLoader";
-import { useTheme } from "./store/useStore";
+import useStore from "./store/useStore";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -15,17 +15,17 @@ const Repo = lazy(() => import("./pages/repo/Repo"));
 const Analysis = lazy(() => import("./pages/analysis/Analysis"));
 
 function App() {
-  const { theme } = useTheme();
+  const theme = useStore((state) => state.theme);
 
-  // Update root class safely
+  // Update root class based on theme - only runs when theme changes
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark" && !root.classList.contains("dark")) {
+    if (theme === "dark") {
       root.classList.add("dark");
-    } else if (theme === "light" && root.classList.contains("dark")) {
+    } else {
       root.classList.remove("dark");
     }
-  }, [theme]);
+  }, [theme]); // Only depend on theme value, not the whole object
 
   return (
     <ErrorBoundary>

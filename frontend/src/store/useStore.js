@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
 
 const useStore = create(
   persist(
@@ -14,7 +13,9 @@ const useStore = create(
 
       // ------------------
       // Theme State
-      theme: 'light',
+      theme: typeof window !== 'undefined' && localStorage.getItem('reposensei-storage') 
+        ? JSON.parse(localStorage.getItem('reposensei-storage')).state?.theme || 'light'
+        : 'light',
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setTheme: (theme) => set({ theme }),
@@ -119,83 +120,8 @@ const useStore = create(
 );
 
 // ------------------
-// Selectors with shallow equality
-export const useAuth = () =>
-  useStore(
-    (state) => ({
-      user: state.user,
-      isAuthenticated: state.isAuthenticated,
-      setUser: state.setUser,
-      logout: state.logout,
-    }),
-    shallow
-  );
-
-export const useTheme = () =>
-  useStore(
-    (state) => ({
-      theme: state.theme,
-      toggleTheme: state.toggleTheme,
-      setTheme: state.setTheme,
-    }),
-    shallow
-  );
-
-export const useRepositories = () =>
-  useStore(
-    (state) => ({
-      repositories: state.repositories,
-      currentRepo: state.currentRepo,
-      loading: state.reposLoading,
-      error: state.reposError,
-      setRepositories: state.setRepositories,
-      setCurrentRepo: state.setCurrentRepo,
-      setLoading: state.setReposLoading,
-      setError: state.setReposError,
-      addRepository: state.addRepository,
-      updateRepository: state.updateRepository,
-      removeRepository: state.removeRepository,
-    }),
-    shallow
-  );
-
-export const useAnalysis = () =>
-  useStore(
-    (state) => ({
-      analyses: state.analyses,
-      currentAnalysis: state.currentAnalysis,
-      loading: state.analysisLoading,
-      error: state.analysisError,
-      setAnalysis: state.setAnalysis,
-      setCurrentAnalysis: state.setCurrentAnalysis,
-      setLoading: state.setAnalysisLoading,
-      setError: state.setAnalysisError,
-      getAnalysis: state.getAnalysis,
-    }),
-    shallow
-  );
-
-export const useNotifications = () =>
-  useStore(
-    (state) => ({
-      notifications: state.notifications,
-      addNotification: state.addNotification,
-      removeNotification: state.removeNotification,
-      clearNotifications: state.clearNotifications,
-    }),
-    shallow
-  );
-
-export const useSearch = () =>
-  useStore(
-    (state) => ({
-      searchQuery: state.searchQuery,
-      filters: state.filters,
-      setSearchQuery: state.setSearchQuery,
-      setFilters: state.setFilters,
-      resetFilters: state.resetFilters,
-    }),
-    shallow
-  );
+// Note: Import useStore directly in components and subscribe to individual values
+// Example: const theme = useStore((state) => state.theme);
+// This prevents object reference issues and infinite loops
 
 export default useStore;

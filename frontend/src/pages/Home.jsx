@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Code2, Sparkles, FileSearch, TrendingUp, Github, ArrowRight, LogOut } from "lucide-react";
 import OAuthButton from "@/components/auth/OAuthButton";
-import useAuth from "@/hooks/useAuth";
+import useStore from "@/store/useStore";
 
 export default function Home() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const user = useStore((state) => state.user);
+  const isAuthenticated = useStore((state) => state.isAuthenticated);
+  const logout = useStore((state) => state.logout);
   const navigate = useNavigate();
 
   // Auto-redirect if logged in
@@ -15,7 +17,7 @@ export default function Home() {
     if (isAuthenticated) {
       navigate("/dashboard");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   const features = [
     { icon: Code2, title: "Smart Analysis", description: "Deep dive into your codebase with AI-powered insights and recommendations" },
@@ -64,11 +66,11 @@ export default function Home() {
                   {/* Avatar + Logout */}
                   <div className="flex items-center gap-2">
                     <img
-                      src={`https://github.com/${user.username}.png`}
+                      src={`https://github.com/${user?.username || 'shadcn'}.png`}
                       alt="Avatar"
                       className="w-10 h-10 rounded-full"
                     />
-                    <span className="font-medium">{user.username}</span>
+                    <span className="font-medium">{user?.username || user?.name || 'User'}</span>
                     <Button
                       size="sm"
                       variant="outline"

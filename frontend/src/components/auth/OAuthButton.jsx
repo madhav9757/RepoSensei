@@ -1,18 +1,22 @@
-import React from "react";
+import { Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function OAuthButton() {
-  const backendUrl = import.meta.env.VITE_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const handleLogin = () => {
-    window.location.href = `${backendUrl}/auth/github/login`;
+    // Redirect to backend GitHub OAuth flow
+    window.location.href = `${API_BASE_URL}/auth/github/login`;
   };
 
   return (
-    <button
+    <Button
       onClick={handleLogin}
-      className="px-6 py-3 rounded-lg bg-gray-900 text-white font-medium hover:bg-gray-800 transition"
+      size="lg"
+      className="gap-2 px-8 bg-gray-900 hover:bg-gray-800 text-white"
     >
-      Connect with GitHub
-    </button>
+      <Github className="size-5" />
+      Sign In with GitHub
+    </Button>
   );
 }

@@ -1,105 +1,113 @@
-// frontend/src/components/ui/toast.jsx
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
-import useStore from '@/store/useStore';
+import { useEffect, useState } from "react";
+import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const TOAST_DURATION = 5000;
+// Toast store
+let toastId = 0;
+const toastListeners = new Set();
+const toasts = [];
 
-const icons = {
-  success: CheckCircle,
-  error: AlertCircle,
-  warning: AlertTriangle,
-  info: Info
-};
+function notifyListeners() {
+  toastListeners.forEach((listener) => listener([...toasts]));
+}
 
-const styles = {
-  success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200',
-  error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200',
-  warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200',
-  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
-};
-
-function ToastItem({ toast, onClose }) {
-  const Icon = icons[toast.type] || Info;
+export const useToast = () => {
+  const [, setToastList] = useState([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose(toast.id);
-    }, toast.duration || TOAST_DURATION);
+    const listener = setToastList;
+    toastListeners.add(listener);
+    return () => toastListeners.delete(listener);
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, onClose]);
+  return {
+    success: (title, description) => addToast("success", title, description),
+    error: (title, description) => addToast("error", title, description),
+    info: (title, description) => addToast("info", title, description),
+  };
+};
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.3 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-      className={`flex items-start gap-3 p-4 rounded-lg border shadow-lg ${styles[toast.type] || styles.info} min-w-[300px] max-w-[500px]`}
-    >
-      <Icon className="size-5 shrink-0 mt-0.5" />
-      
-      <div className="flex-1 min-w-0">
-        {toast.title && (
-          <p className="font-semibold text-sm mb-1">{toast.title}</p>
-        )}
-        {toast.message && (
-          <p className="text-sm opacity-90">{toast.message}</p>
-        )}
-      </div>
+function addToast(type, title, description) {
+  const id = toastId++;
+  const toast = { id, type, title, description };
+  toasts.push(toast);
+  notifyListeners();
 
-      <button
-        onClick={() => onClose(toast.id)}
-        className="shrink-0 hover:opacity-70 transition-opacity"
-        aria-label="Close notification"
-      >
-        <X className="size-4" />
-      </button>
-    </motion.div>
-  );
+  // Auto remove after 5 seconds
+  setTimeout(() => removeToast(id), 5000);
+}
+
+function removeToast(id) {
+  const index = toasts.findIndex((t) => t.id === id);
+  if (index !== -1) {
+    toasts.splice(index, 1);
+    notifyListeners();
+  }
 }
 
 export function ToastContainer() {
-  const { notifications, removeNotification } = useStore((state) => ({
-    notifications: state.notifications,
-    removeNotification: state.removeNotification
-  }));
+  const [toastList, setToastList] = useState([]);
+
+  useEffect(() => {
+    toastListeners.add(setToastList);
+    return () => toastListeners.delete(setToastList);
+  }, []);
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-      <AnimatePresence mode="popLayout">
-        {notifications.map((toast) => (
-          <ToastItem
-            key={toast.id}
-            toast={toast}
-            onClose={removeNotification}
-          />
+    <div className="fixed top-4 right-4 z-50 w-full max-w-sm space-y-2">
+      <AnimatePresence>
+        {toastList.map((toast) => (
+          <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} />
         ))}
       </AnimatePresence>
     </div>
   );
 }
 
-// Hook for easy toast usage
-export function useToast() {
-  const addNotification = useStore((state) => state.addNotification);
-
-  return {
-    success: (message, title = 'Success') => {
-      addNotification({ type: 'success', title, message });
+function Toast({ id, type, title, description, onClose }) {
+  const config = {
+    success: {
+      icon: CheckCircle,
+      bg: "bg-green-50 dark:bg-green-900/30",
+      border: "border-green-200 dark:border-green-800",
+      iconColor: "text-green-600 dark:text-green-400",
     },
-    error: (message, title = 'Error') => {
-      addNotification({ type: 'error', title, message });
+    error: {
+      icon: AlertCircle,
+      bg: "bg-red-50 dark:bg-red-900/30",
+      border: "border-red-200 dark:border-red-800",
+      iconColor: "text-red-600 dark:text-red-400",
     },
-    warning: (message, title = 'Warning') => {
-      addNotification({ type: 'warning', title, message });
+    info: {
+      icon: Info,
+      bg: "bg-blue-50 dark:bg-blue-900/30",
+      border: "border-blue-200 dark:border-blue-800",
+      iconColor: "text-blue-600 dark:text-blue-400",
     },
-    info: (message, title = 'Info') => {
-      addNotification({ type: 'info', title, message });
-    },
-    custom: (options) => {
-      addNotification(options);
-    }
   };
+
+  const { icon: Icon, bg, border, iconColor } = config[type];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 100, scale: 0.95 }}
+      className={`${bg} ${border} border rounded-lg shadow-lg p-4 flex items-start gap-3`}
+    >
+      <Icon className={`size-5 ${iconColor} shrink-0 mt-0.5`} />
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm">{title}</p>
+        {description && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>
+        )}
+      </div>
+      <button
+        onClick={onClose}
+        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+      >
+        <X className="size-4" />
+      </button>
+    </motion.div>
+  );
 }
