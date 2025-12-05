@@ -5,6 +5,7 @@ import compression from "compression";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 // Import route files
 import githubAuthRoutes from "./api/auth/githubAuth.routes.js";
@@ -27,18 +28,22 @@ const limiter = rateLimit({
 });
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 app.use(helmet());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(cookieParser()); // ⬅️ IMPORTANT FOR AUTH
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Apply rate limiter to API routes
-app.use('/api/', limiter);
+app.use("/api/", limiter);
 
 // Root Route
 app.get("/", (req, res) => {
@@ -50,8 +55,8 @@ app.get("/", (req, res) => {
       repos: "/api/repos",
       analyze: "/api/analyze",
       suggestions: "/api/suggestions",
-      pullRequests: "/api/pr"
-    }
+      pullRequests: "/api/pr",
+    },
   });
 });
 
@@ -66,11 +71,11 @@ app.use("/api/pr", prRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ 
-    status: "ok", 
+  res.json({
+    status: "ok",
     message: "RepoSensei backend running!",
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -79,24 +84,16 @@ app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
     message: `Route ${req.originalUrl} not found`,
-    availableRoutes: [
-      "GET /api/health",
-      "GET /api/repos?username={username}",
-      "GET /api/repos/:owner/:repo",
-      "POST /api/analyze",
-      "GET /api/analyze/:owner/:repo",
-      "GET /api/pr/:owner/:repo"
-    ]
   });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err);
-  
+  console.error("❌ Error:", err);
+
   res.status(err.status || 500).json({
     error: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 

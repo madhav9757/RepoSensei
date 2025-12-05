@@ -1,14 +1,18 @@
+import React from "react";
+
 export default function OAuthButton() {
+  const backendUrl = import.meta.env.VITE_API_URL;
+
   const handleLogin = () => {
-    window.location.href = import.meta.env.VITE_BACKEND_URL + "/auth/github/login";
+    window.location.href = `${backendUrl}/auth/github/login`;
   };
 
   return (
     <button
       onClick={handleLogin}
-      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      className="px-6 py-3 rounded-lg bg-gray-900 text-white font-medium hover:bg-gray-800 transition"
     >
-      Connect GitHub
+      Connect with GitHub
     </button>
   );
 }
