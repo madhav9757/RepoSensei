@@ -6,7 +6,10 @@ import Footer from "./components/layout/Footer";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { ToastContainer } from "./components/ui/toast";
 import Loader from "./components/common/SkeletonLoader";
-import useStore from "./store/useStore";
+
+// Zustand stores
+import useAuthStore from "./store/useAuthStore";
+import useThemeStore from "./store/useThemeStore";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -15,9 +18,15 @@ const Repo = lazy(() => import("./pages/repo/Repo"));
 const Analysis = lazy(() => import("./pages/analysis/Analysis"));
 
 function App() {
-  const theme = useStore((state) => state.theme);
+  const theme = useThemeStore((state) => state.theme);
+  const fetchMe = useAuthStore((state) => state.fetchMe);
 
-  // Update root class based on theme - only runs when theme changes
+  // Restore user session on mount
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
+  // Apply theme class to <html>
   useEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
@@ -25,7 +34,7 @@ function App() {
     } else {
       root.classList.remove("dark");
     }
-  }, [theme]); // Only depend on theme value, not the whole object
+  }, [theme]);
 
   return (
     <ErrorBoundary>
@@ -55,6 +64,7 @@ function App() {
   );
 }
 
+// Fallback 404 page
 function NotFound() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">

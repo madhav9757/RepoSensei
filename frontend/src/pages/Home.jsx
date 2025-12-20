@@ -1,18 +1,27 @@
+// frontend/src/pages/Home.jsx
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Code2, Sparkles, FileSearch, TrendingUp, Github, ArrowRight, LogOut } from "lucide-react";
+import {
+  Code2,
+  Sparkles,
+  FileSearch,
+  TrendingUp,
+  Github,
+  ArrowRight,
+  LogOut,
+} from "lucide-react";
 import OAuthButton from "@/components/auth/OAuthButton";
-import useStore from "@/store/useStore";
+import useAuthStore from "@/store/useAuthStore";
 
 export default function Home() {
-  const user = useStore((state) => state.user);
-  const isAuthenticated = useStore((state) => state.isAuthenticated);
-  const logout = useStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
-  // Auto-redirect if logged in
+  // Auto-redirect to dashboard if logged in
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
@@ -20,10 +29,27 @@ export default function Home() {
   }, [isAuthenticated, navigate]);
 
   const features = [
-    { icon: Code2, title: "Smart Analysis", description: "Deep dive into your codebase with AI-powered insights and recommendations" },
-    { icon: FileSearch, title: "File Structure", description: "Visualize and understand your repository architecture instantly" },
-    { icon: TrendingUp, title: "Quality Metrics", description: "Track code quality, complexity, and maintainability scores" },
-    { icon: Sparkles, title: "AI Suggestions", description: "Get intelligent recommendations to improve your code" }
+    {
+      icon: Code2,
+      title: "Smart Analysis",
+      description:
+        "Deep dive into your codebase with AI-powered insights and recommendations",
+    },
+    {
+      icon: FileSearch,
+      title: "File Structure",
+      description: "Visualize and understand your repository architecture instantly",
+    },
+    {
+      icon: TrendingUp,
+      title: "Quality Metrics",
+      description: "Track code quality, complexity, and maintainability scores",
+    },
+    {
+      icon: Sparkles,
+      title: "AI Suggestions",
+      description: "Get intelligent recommendations to improve your code",
+    },
   ];
 
   return (
@@ -63,20 +89,16 @@ export default function Home() {
                       <ArrowRight className="size-4" />
                     </Button>
                   </Link>
+
                   {/* Avatar + Logout */}
                   <div className="flex items-center gap-2">
                     <img
-                      src={`https://github.com/${user?.username || 'shadcn'}.png`}
+                      src={`https://github.com/${user?.username || "shadcn"}.png`}
                       alt="Avatar"
                       className="w-10 h-10 rounded-full"
                     />
-                    <span className="font-medium">{user?.username || user?.name || 'User'}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1"
-                      onClick={logout}
-                    >
+                    <span className="font-medium">{user?.username || user?.name || "User"}</span>
+                    <Button size="sm" variant="outline" className="gap-1" onClick={logout}>
                       <LogOut className="size-4" />
                       Logout
                     </Button>
@@ -104,19 +126,23 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <Card key={index} className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="p-6 space-y-4">
-                <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <feature.icon className="size-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <Card
+                key={index}
+                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              >
+                <CardContent className="p-6 space-y-4">
+                  <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Icon className="size-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{feature.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </section>
     </div>
