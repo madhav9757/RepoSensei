@@ -113,6 +113,7 @@ export const getMe = (req, res) => {
         id: decoded.id,
         username: decoded.username,
         avatar: decoded.avatar,
+        accessToken: decoded.accessToken,
       },
     });
   } catch (err) {
@@ -128,4 +129,22 @@ export const getMe = (req, res) => {
 export const logout = (req, res) => {
   res.clearCookie("rs_token");
   return res.json({ success: true, message: "Logged out" });
+};
+
+
+// src/middlewares/auth.middleware.js
+
+export const requireAuth = (req, res, next) => {
+  const token = req.cookies?.rs_token;
+
+  if (!token) return res.status(401).json({ error: "Not authenticated" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // includes accessToken!
+    next();
+  } catch (err) {
+    res.clearCookie("rs_token");
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 };

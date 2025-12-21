@@ -7,56 +7,29 @@ import {
 
 export const getUserRepos = async (req, res) => {
   try {
-    const { username } = req.query;
-    
-    if (!username) {
-      return res.status(400).json({ 
-        error: "Username is required",
-        message: "Please provide a GitHub username in the query parameters"
-      });
+    const { username, accessToken } = req.user;
+
+    if (!username || !accessToken) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    console.log(`Fetching repos for user: ${username}`);
-    const repos = await fetchUserRepos(username);
-    
-    const formattedRepos = repos.map(repo => ({
-      id: repo.id,
-      name: repo.name,
-      full_name: repo.full_name,
-      description: repo.description,
-      html_url: repo.html_url,
-      clone_url: repo.clone_url,
-      private: repo.private,
-      language: repo.language,
-      stargazers_count: repo.stargazers_count,
-      forks_count: repo.forks_count,
-      open_issues_count: repo.open_issues_count,
-      created_at: repo.created_at,
-      updated_at: repo.updated_at,
-      default_branch: repo.default_branch,
-    }));
+    const repos = await fetchUserRepos(username, accessToken);
 
     res.json({
       success: true,
-      count: formattedRepos.length,
-      data: formattedRepos
+      count: repos.length,
+      data: repos,
     });
   } catch (error) {
-    console.error('Error in getUserRepos:', error);
-    
-    if (error.status === 404) {
-      return res.status(404).json({ 
-        error: "User not found",
-        message: `GitHub user '${req.query.username}' does not exist`
-      });
-    }
-    
-    res.status(500).json({ 
+    console.error("getUserRepos error:", error);
+
+    res.status(500).json({
       error: "Failed to fetch repositories",
-      message: error.message
+      message: error.response?.data?.message || error.message || "GitHub API error",
     });
   }
 };
+
 
 export const getRepoInfo = async (req, res) => {
   try {

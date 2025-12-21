@@ -1,6 +1,5 @@
-// frontend/src/pages/Home.jsx
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -10,118 +9,104 @@ import {
   TrendingUp,
   Github,
   ArrowRight,
-  LogOut,
 } from "lucide-react";
 import OAuthButton from "@/components/auth/OAuthButton";
-import useAuthStore from "@/store/useAuthStore";
+import useAuthStore from "@/store/authStore";
 
 export default function Home() {
-  const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
-
-  // Auto-redirect to dashboard if logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
+  const { user, loading } = useAuthStore();
+  const isAuthenticated = !!user;
 
   const features = [
     {
       icon: Code2,
       title: "Smart Analysis",
-      description:
-        "Deep dive into your codebase with AI-powered insights and recommendations",
+      description: "AI-powered insights to understand your codebase deeply",
     },
     {
       icon: FileSearch,
       title: "File Structure",
-      description: "Visualize and understand your repository architecture instantly",
+      description: "Instantly visualize repository architecture",
     },
     {
       icon: TrendingUp,
       title: "Quality Metrics",
-      description: "Track code quality, complexity, and maintainability scores",
+      description: "Track maintainability and complexity scores",
     },
     {
       icon: Sparkles,
       title: "AI Suggestions",
-      description: "Get intelligent recommendations to improve your code",
+      description: "Actionable recommendations to improve code quality",
     },
   ];
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
-      {/* Hero Section */}
+      {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="absolute inset-0 bg-grid-gray-900/[0.04] dark:bg-grid-white/[0.02]" />
-        <div className="relative max-w-7xl mx-auto px-6 py-24 sm:py-32">
-          <div className="text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
-              <Sparkles className="size-4" />
-              AI-Powered Code Analysis
-            </div>
+        <div className="relative max-w-7xl mx-auto px-6 py-24 sm:py-32 text-center space-y-8">
+          
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium">
+            <Sparkles className="size-4" />
+            AI-Powered Code Analysis
+          </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-              Transform Your{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                GitHub Repos
-              </span>
-            </h1>
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
+            {isAuthenticated ? (
+              <>
+                Welcome back,{" "}
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {user.username}
+                </span>
+              </>
+            ) : (
+              <>
+                Transform Your{" "}
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  GitHub Repos
+                </span>
+              </>
+            )}
+          </h1>
 
-            <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-300">
-              RepoSensei analyzes your repositories with advanced AI, providing actionable insights
-              to improve code quality, structure, and maintainability.
-            </p>
+          <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-300">
+            {isAuthenticated
+              ? "Jump back in and continue analyzing your repositories with RepoSensei."
+              : "RepoSensei analyzes your repositories with AI, delivering insights to improve code quality and structure."}
+          </p>
 
+          {/* CTA */}
+          {!loading && (
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {!isAuthenticated ? (
-                <OAuthButton />
+                <>
+                  <OAuthButton />
+                  <Button size="lg" variant="outline">
+                    View Demo
+                  </Button>
+                </>
               ) : (
-                <div className="flex gap-4 items-center">
-                  {/* Go to Dashboard */}
-                  <Link to="/dashboard">
-                    <Button size="lg" className="gap-2 px-8">
-                      <Github className="size-5" />
-                      Go to Dashboard
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </Link>
-
-                  {/* Avatar + Logout */}
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={`https://github.com/${user?.username || "shadcn"}.png`}
-                      alt="Avatar"
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <span className="font-medium">{user?.username || user?.name || "User"}</span>
-                    <Button size="sm" variant="outline" className="gap-1" onClick={logout}>
-                      <LogOut className="size-4" />
-                      Logout
-                    </Button>
-                  </div>
-                </div>
+                <Link to="/dashboard">
+                  <Button size="lg" className="gap-2 px-8">
+                    <Github className="size-5" />
+                    Go to Dashboard
+                    <ArrowRight className="size-4" />
+                  </Button>
+                </Link>
               )}
-
-              <Button size="lg" variant="outline" className="gap-2 px-8">
-                View Demo
-              </Button>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* FEATURES */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold">
             Everything You Need to Analyze Code
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Powerful features to help you understand and improve your repositories
+            Powerful features designed for modern developers
           </p>
         </div>
 
@@ -131,14 +116,16 @@ export default function Home() {
             return (
               <Card
                 key={index}
-                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                className="group hover:shadow-lg transition-all hover:-translate-y-1"
               >
                 <CardContent className="p-6 space-y-4">
                   <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Icon className="size-6 text-white" />
                   </div>
                   <h3 className="text-xl font-semibold">{feature.title}</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {feature.description}
+                  </p>
                 </CardContent>
               </Card>
             );

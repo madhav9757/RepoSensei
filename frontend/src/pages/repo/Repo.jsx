@@ -1,35 +1,30 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import RepoTree from "@/components/repo/RepoTree";
-import SuggestionsPanel from "@/components/repo/SuggestionsPanel";
 import { Button } from "@/components/ui/button";
-import api from "@/utils/api";
+import useRepoStore from "@/store/useRepoStore";
 
 export default function Repo() {
   const { id } = useParams();
-  const [tree, setTree] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    repoTree,
+    suggestions,
+    loading,
+    error,
+    fetchRepoTree,
+    fetchSuggestions,
+    clearRepoData,
+  } = useRepoStore();
 
   useEffect(() => {
-    async function loadRepo() {
-      try {
-        const treeData = await api.get(`/repo/${id}/tree`);
-        const sugData = await api.get(`/suggestions/${id}`);
+    fetchRepoTree(id);
+    fetchSuggestions(id);
 
-        setTree(treeData.tree || []);
-        setSuggestions(sugData.suggestions || []);
-      } catch (err) {
-        console.error("Failed to fetch repo data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadRepo();
+    return () => clearRepoData();
   }, [id]);
 
   if (loading) return <p className="p-6 text-lg">Loading repository...</p>;
+  if (error) return <p className="p-6 text-lg text-red-600">{error}</p>;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
@@ -37,7 +32,7 @@ export default function Repo() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <RepoTree tree={tree} />
+          <RepoTree tree={repoTree} />
 
           <Link to={`/analysis/${id}`}>
             <Button className="mt-4">Run Analysis</Button>

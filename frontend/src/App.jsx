@@ -1,87 +1,19 @@
-// frontend/src/App.jsx
-import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/layout/Navbar";
-import Footer from "./components/layout/Footer";
-import ErrorBoundary from "./components/common/ErrorBoundary";
-import { ToastContainer } from "./components/ui/toast";
-import Loader from "./components/common/SkeletonLoader";
+import { useEffect } from "react";
+import useAuthStore from "@/store/authStore";
+import AppRoutes from "@/routes/AppRoutes";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
-// Zustand stores
-import useAuthStore from "./store/useAuthStore";
-import useThemeStore from "./store/useThemeStore";
+export default function App() {
+  const fetchMe = useAuthStore((s) => s.fetchMe);
 
-// Lazy load pages
-const Home = lazy(() => import("./pages/Home"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Repo = lazy(() => import("./pages/repo/Repo"));
-const Analysis = lazy(() => import("./pages/analysis/Analysis"));
-
-function App() {
-  const theme = useThemeStore((state) => state.theme);
-  const fetchMe = useAuthStore((state) => state.fetchMe);
-
-  // Restore user session on mount
   useEffect(() => {
     fetchMe();
-  }, [fetchMe]);
-
-  // Apply theme class to <html>
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [theme]);
+  }, [fetchMe]); // ✅ dependency added
 
   return (
-    <ErrorBoundary>
-      <Router>
-        <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors">
-          <Navbar />
-
-          <main className="flex-1">
-            <Suspense fallback={<Loader message="Loading page..." fullScreen />}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/repo/:id" element={<Repo />} />
-                <Route path="/analysis/:id" element={<Analysis />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </main>
-
-          <Footer />
-
-          {/* Toast notifications */}
-          <ToastContainer />
-        </div>
-      </Router>
-    </ErrorBoundary>
+    <>
+      <AppRoutes />
+      <Sonner />
+    </>
   );
 }
-
-// Fallback 404 page
-function NotFound() {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="text-center space-y-4">
-        <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          404
-        </h1>
-        <p className="text-xl text-gray-600 dark:text-gray-400">Page not found</p>
-        <a
-          href="/"
-          className="inline-flex items-center justify-center px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-        >
-          Go Home
-        </a>
-      </div>
-    </div>
-  );
-}
-
-export default App;
