@@ -1,57 +1,166 @@
-// src/pages/Repo/Repo.jsx
-import { useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Search, Star, GitBranch, Clock } from "lucide-react";
 import useRepoStore from "@/store/useRepoStore";
-import useAuthStore from "@/store/authStore";
-import RepoTree from "@/components/repo/RepoTree";
-import { Button } from "@/components/ui/button";
+import RepoCard from "@/components/repo/RepoCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
 
 export default function Repo() {
-  const { id } = useParams();
-  const user = useAuthStore((s) => s.user);
-  const fetchMe = useAuthStore((s) => s.fetchMe);
+  const { repos, fetchUserRepos, loading, error } = useRepoStore();
 
-  const {
-    repoTree,
-    suggestions,
-    fetchRepoTree,
-    fetchSuggestions,
-    loading,
-    error,
-  } = useRepoStore();
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("updated");
 
-  // Ensure user is loaded
   useEffect(() => {
-    if (!user) fetchMe();
-  }, [user]);
+    fetchUserRepos();
+  }, []);
 
-  // Fetch repo data once user is available
-  useEffect(() => {
-    if (!user) return;
+  /* ---------- FILTER + SORT ---------- */
+  const filteredRepos = useMemo(() => {
+    let data = repos.filter((r) =>
+      r.name.toLowerCase().includes(query.toLowerCase())
+    );
 
-    fetchRepoTree(id);
-    fetchSuggestions(id);
-  }, [user, id]);
+    if (sort === "stars") {
+      data.sort((a, b) => b.stars - a.stars);
+    } else if (sort === "name") {
+      data.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      data.sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+    }
 
-  if (!user) return <p className="p-6">Loading user info...</p>;
-  if (loading) return <p className="p-6">Loading repository...</p>;
-  if (error) return <p className="p-6 text-red-600">{error}</p>;
+    return data;
+  }, [repos, query, sort]);
+
+  /* ---------- STATS ---------- */
+  const stats = useMemo(() => {
+    return {
+      total: repos.length,
+      stars: repos.reduce((a, r) => a + r.stars, 0),
+      forks: repos.reduce((a, r) => a + r.forks, 0),
+    };
+  }, [repos]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold mb-4">Repository #{id}</h1>
+    <Card className="border border-border rounded-2xl shadow-xl bg-background/80 backdrop-blur">
+      {/* ---------- HEADER ---------- */}
+      <CardHeader className="space-y-4 border-b border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <CardTitle className="text-2xl">
+            Your Repositories
+          </CardTitle>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <RepoTree tree={repoTree} />
+          {/* Controls */}
+          <div className="flex gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search repos..."
+                className="pl-9 w-[220px]"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
 
-          <Link to={`/analysis/${id}`}>
-            <Button className="mt-4">Run Analysis</Button>
-          </Link>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="updated">Recently Updated</SelectItem>
+                <SelectItem value="stars">Most Stars</SelectItem>
+                <SelectItem value="name">Name (A–Z)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <SuggestionsPanel suggestions={suggestions} />
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <Stat icon={<GitBranch />} label="Repos" value={stats.total} />
+          <Stat icon={<Star />} label="Stars" value={stats.stars} />
+          <Stat icon={<Clock />} label="Forks" value={stats.forks} />
+        </div>
+      </CardHeader>
+
+      {/* ---------- CONTENT ---------- */}
+      <CardContent className="py-6">
+        {/* Loading Skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <p className="text-center text-red-600 font-medium">
+            {error}
+          </p>
+        )}
+
+        {/* Empty */}
+        {!loading && !error && filteredRepos.length === 0 && (
+          <div className="text-center py-16 space-y-2">
+            <p className="text-xl font-semibold">
+              No repositories found
+            </p>
+            <p className="text-muted-foreground">
+              Try changing search or sort
+            </p>
+          </div>
+        )}
+
+        {/* Repo Grid */}
+        {!loading && !error && filteredRepos.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRepos.map((repo) => (
+              <RepoCard
+                key={repo.id}
+                repo={repo}
+                className="group transition-all hover:-translate-y-1 hover:shadow-2xl"
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ---------- SMALL COMPONENTS ---------- */
+
+function Stat({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-border px-4 py-2">
+      <span className="text-muted-foreground">{icon}</span>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="font-semibold">{value}</p>
       </div>
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-xl border border-border p-4 space-y-3">
+      <div className="h-5 w-2/3 bg-muted rounded" />
+      <div className="h-4 w-full bg-muted rounded" />
+      <div className="h-4 w-1/2 bg-muted rounded" />
     </div>
   );
 }
