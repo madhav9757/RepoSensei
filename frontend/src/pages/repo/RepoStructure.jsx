@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import useRepoStore from "../store/useRepoStore";
+import useRepoStore from "@/store/useRepoStore";
 
 export default function RepoStructure() {
   const { owner, repo } = useParams();

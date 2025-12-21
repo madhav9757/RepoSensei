@@ -1,6 +1,5 @@
 // src/store/useRepoStore.js
 import { create } from "zustand";
-import useAuthStore from "./authStore";
 import api from "@/api/api";
 
 const useRepoStore = create((set) => ({
@@ -11,13 +10,10 @@ const useRepoStore = create((set) => ({
   loading: false,
   error: "",
 
-  // fetchUserRepos in Zustand store
   fetchUserRepos: async () => {
     set({ loading: true, error: "" });
     try {
-      const user = useAuthStore.getState().user; 
-      if (!user) throw new Error("User not logged in");
-      const res = await api.get(`/repos?username=${user.username}`);
+      const res = await api.get("/repos"); // assumes backend fetches based on session
       set({ repos: res.data.data });
     } catch (err) {
       set({ error: err.response?.data?.message || err.message });
@@ -26,11 +22,11 @@ const useRepoStore = create((set) => ({
     }
   },
 
-  fetchRepoTree: async (id) => {
+  fetchRepoDetails: async (owner, repo) => {
     set({ loading: true, error: "" });
     try {
-      const res = await api.get(`/repo/${id}/tree`);
-      set({ repoTree: res.data.data || [] });
+      const res = await api.get(`/repo/${owner}/${repo}`);
+      set({ selectedRepo: res.data.data });
     } catch (err) {
       set({ error: err.response?.data?.message || err.message });
     } finally {
@@ -38,11 +34,11 @@ const useRepoStore = create((set) => ({
     }
   },
 
-  fetchSuggestions: async (id) => {
+  fetchRepoStructure: async (owner, repo) => {
     set({ loading: true, error: "" });
     try {
-      const res = await api.get(`/suggestions/${id}`);
-      set({ suggestions: res.data.data || [] });
+      const res = await api.get(`/repo/${owner}/${repo}/structure`);
+      set({ repoTree: res.data.data });
     } catch (err) {
       set({ error: err.response?.data?.message || err.message });
     } finally {

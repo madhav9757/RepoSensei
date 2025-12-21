@@ -6,6 +6,7 @@ import Repo from "@/pages/Repo/Repo"; // your Repo.jsx page
 import RepoDetails from "@/components/repo/RepoDetails"; // optional, detailed repo info
 import ProtectedRoute from "./ProtectedRoute";
 import Navbar from "@/components/layout/Navbar";
+import RepoStructure from "@/pages/repo/RepoStructure";
 
 function Layout({ children }) {
   return (
@@ -66,6 +67,17 @@ export default function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <RepoDetails />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/repo/:owner/:repo/structure"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <RepoStructure/>
             </Layout>
           </ProtectedRoute>
         }

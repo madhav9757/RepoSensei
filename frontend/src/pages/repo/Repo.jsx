@@ -1,30 +1,41 @@
-import { useParams, Link } from "react-router-dom";
+// src/pages/Repo/Repo.jsx
 import { useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import useRepoStore from "@/store/useRepoStore";
+import useAuthStore from "@/store/authStore";
 import RepoTree from "@/components/repo/RepoTree";
 import { Button } from "@/components/ui/button";
-import useRepoStore from "@/store/useRepoStore";
 
 export default function Repo() {
   const { id } = useParams();
+  const user = useAuthStore((s) => s.user);
+  const fetchMe = useAuthStore((s) => s.fetchMe);
+
   const {
     repoTree,
     suggestions,
-    loading,
-    error,
     fetchRepoTree,
     fetchSuggestions,
-    clearRepoData,
+    loading,
+    error,
   } = useRepoStore();
 
+  // Ensure user is loaded
   useEffect(() => {
+    if (!user) fetchMe();
+  }, [user]);
+
+  // Fetch repo data once user is available
+  useEffect(() => {
+    if (!user) return;
+
     fetchRepoTree(id);
     fetchSuggestions(id);
+  }, [user, id]);
 
-    return () => clearRepoData();
-  }, [id]);
-
-  if (loading) return <p className="p-6 text-lg">Loading repository...</p>;
-  if (error) return <p className="p-6 text-lg text-red-600">{error}</p>;
+  if (!user) return <p className="p-6">Loading user info...</p>;
+  if (loading) return <p className="p-6">Loading repository...</p>;
+  if (error) return <p className="p-6 text-red-600">{error}</p>;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
