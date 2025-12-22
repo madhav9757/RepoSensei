@@ -10,7 +10,6 @@ import cookieParser from "cookie-parser";
 // Import route files
 import githubAuthRoutes from "./api/auth/githubAuth.routes.js";
 import repoRoutes from "./api/repos/repo.routes.js";
-import analyzeRoutes from "./api/analyze/analyze.routes.js";
 import suggestionsRoutes from "./api/suggestions/suggestions.routes.js";
 import prRoutes from "./api/pr/pr.routes.js";
 
@@ -64,8 +63,6 @@ app.get("/", (req, res) => {
 app.use("/api/auth", githubAuthRoutes);
 app.use("/api/repos", repoRoutes);
 app.use("/api/repo", repoRoutes);
-app.use("/api/analyze", analyzeRoutes);
-app.use("/api/analysis", analyzeRoutes);
 app.use("/api/suggestions", suggestionsRoutes);
 app.use("/api/pr", prRoutes);
 
