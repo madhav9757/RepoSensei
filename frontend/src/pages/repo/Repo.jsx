@@ -1,8 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Star, GitBranch, Clock } from "lucide-react";
+import {
+  Search,
+  Star,
+  GitBranch,
+  Clock,
+  Code,
+  Layers,
+  Zap,
+} from "lucide-react";
+import { motion } from "framer-motion";
+
 import useRepoStore from "@/store/useRepoStore";
 import RepoCard from "@/components/repo/RepoCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,11 +27,11 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export default function Repo() {
   const { repos, fetchUserRepos, loading, error } = useRepoStore();
-
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("updated");
 
@@ -34,9 +50,7 @@ export default function Repo() {
     } else if (sort === "name") {
       data.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      data.sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-      );
+      data.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
     }
 
     return data;
@@ -56,8 +70,8 @@ export default function Repo() {
       {/* ---------- HEADER ---------- */}
       <CardHeader className="space-y-4 border-b border-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <CardTitle className="text-2xl">
-            Your Repositories
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Layers className="w-5 h-5" /> Your Repositories
           </CardTitle>
 
           {/* Controls */}
@@ -76,7 +90,6 @@ export default function Repo() {
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-
               <SelectContent>
                 <SelectItem value="updated">Recently Updated</SelectItem>
                 <SelectItem value="stars">Most Stars</SelectItem>
@@ -107,9 +120,7 @@ export default function Repo() {
 
         {/* Error */}
         {error && (
-          <p className="text-center text-red-600 font-medium">
-            {error}
-          </p>
+          <p className="text-center text-red-600 font-medium">{error}</p>
         )}
 
         {/* Empty */}
@@ -128,11 +139,18 @@ export default function Repo() {
         {!loading && !error && filteredRepos.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRepos.map((repo) => (
-              <RepoCard
+              <motion.div
                 key={repo.id}
-                repo={repo}
-                className="group transition-all hover:-translate-y-1 hover:shadow-2xl"
-              />
+                whileHover={{ scale: 1.03 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <RepoCard
+                  repo={repo}
+                  className="group transition-all hover:-translate-y-1 hover:shadow-2xl"
+                />
+              </motion.div>
             ))}
           </div>
         )}
@@ -145,22 +163,33 @@ export default function Repo() {
 
 function Stat({ icon, label, value }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-border px-4 py-2">
-      <span className="text-muted-foreground">{icon}</span>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="font-semibold">{value}</p>
-      </div>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 cursor-pointer hover:bg-muted/10 transition">
+          <span className="text-muted-foreground">{icon}</span>
+          <div>
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="font-semibold">{value}</p>
+          </div>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        Total <strong>{label}</strong> in your repositories
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-xl border border-border p-4 space-y-3">
+    <div className="animate-pulse rounded-xl border border-border p-4 space-y-3 bg-background/50">
       <div className="h-5 w-2/3 bg-muted rounded" />
       <div className="h-4 w-full bg-muted rounded" />
       <div className="h-4 w-1/2 bg-muted rounded" />
+      <div className="flex gap-2 mt-2">
+        <div className="h-3 w-8 bg-muted rounded" />
+        <div className="h-3 w-12 bg-muted rounded" />
+      </div>
     </div>
   );
 }
