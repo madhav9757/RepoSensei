@@ -3,17 +3,13 @@ import { getAICodeSuggestions } from "../../core/ai/ai.suggestions.js";
 
 /**
  * POST /api/suggestions
- * Body:
- * {
- *   "owner": "facebook",
- *   "repo": "react",
- *   "goal": "Improve performance and folder structure"
- * }
+ * Body: { "owner": "...", "repo": "...", "goal": "..." }
  */
 export const generateSuggestions = async (req, res) => {
   try {
     const { owner, repo, goal } = req.body;
 
+    // Validation
     if (!owner || !repo) {
       return res.status(400).json({
         success: false,
@@ -21,10 +17,11 @@ export const generateSuggestions = async (req, res) => {
       });
     }
 
-    // 1️⃣ Build repo context (files, structure, tech stack)
-    const repoContext = await buildRepoContext({ owner, repo });
+    // 1️⃣ Build repo context
+    // FIX: Pass (owner, repo) as separate arguments to match repo.context.js
+    const repoContext = await buildRepoContext(owner, repo);
 
-    if (!repoContext || repoContext.files.length === 0) {
+    if (!repoContext || !repoContext.files || repoContext.files.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Repository is empty or could not be analyzed",
@@ -32,6 +29,7 @@ export const generateSuggestions = async (req, res) => {
     }
 
     // 2️⃣ Call LLM for suggestions
+    // Pass the context and goal to the service
     const suggestions = await getAICodeSuggestions({
       repoContext,
       goal: goal || "General code improvement",
@@ -41,7 +39,7 @@ export const generateSuggestions = async (req, res) => {
     return res.status(200).json({
       success: true,
       repo: `${owner}/${repo}`,
-      suggestions,
+      suggestions, // This will be the JSON array from the LLM
     });
 
   } catch (error) {

@@ -1,30 +1,24 @@
+"use client";
+
 import { useEffect } from "react";
-import {
-  Github,
-  Star,
-  GitBranch,
-  Activity,
-  Folder,
-  BarChart2,
-  Zap,
-  Settings,
-  Info,
-} from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Github, Star, GitBranch, Activity, Folder, BarChart2, Zap,
+  Settings, Info, TrendingUp, History, ArrowUpRight,
+} from "lucide-react";
 
 import useAuthStore from "@/store/authStore";
 import useRepoStore from "@/store/useRepoStore";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 import Repo from "./repo/Repo";
 
 export default function Dashboard() {
@@ -34,170 +28,162 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) fetchMe();
-  }, [user]);
+  }, [user, fetchMe]);
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <p className="text-muted-foreground text-lg animate-pulse">
-          Loading dashboard…
+      <div className="flex h-[60vh] w-full flex-col items-center justify-center gap-3">
+        <Activity className="h-8 w-8 animate-pulse text-primary" />
+        <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground">
+          Syncing Environment
         </p>
       </div>
     );
   }
 
-  /* ---------- DASHBOARD METRICS ---------- */
   const totalStars = repos.reduce((a, r) => a + r.stars, 0);
   const totalForks = repos.reduce((a, r) => a + r.forks, 0);
   const mostStarred = [...repos].sort((a, b) => b.stars - a.stars)[0];
 
   return (
-    <div className="mx-auto max-w-7xl p-6 space-y-10">
-      {/* ---------- HERO ---------- */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col gap-3"
-      >
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-          Welcome back,{" "}
-          <span className="ml-2 text-blue-600 dark:text-blue-400">{user.username}</span>
-        </h1>
-        <p className="text-muted-foreground max-w-2xl">
-          Here’s a snapshot of your repositories and recent activity.
-        </p>
-      </motion.div>
+    <TooltipProvider>
+      <div className="mx-auto max-w-6xl space-y-5 pb-6 pt-2">
+        
+        {/* --- COMPACT HEADER --- */}
+        <header className="flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="h-4 text-[9px] uppercase font-bold px-1.5 rounded-sm">
+                Pro
+              </Badge>
+              <span className="text-[10px] text-muted-foreground tabular-nums">v2.4.0-stable</span>
+            </div>
+            <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
+              System Dashboard <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </h1>
+          </motion.div>
 
-      {/* ---------- STATS GRID ---------- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Repositories" value={repos.length} icon={<Folder />} />
-        <StatCard title="Total Stars" value={totalStars} icon={<Star />} />
-        <StatCard title="Total Forks" value={totalForks} icon={<GitBranch />} />
-        <StatCard title="Top Repo" value={mostStarred?.name || "—"} icon={<Activity />} small />
-      </div>
-
-      {/* ---------- ADVANCED TABS ---------- */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">
-            <BarChart2 className="w-4 h-4 mr-2" /> Overview
-          </TabsTrigger>
-          <TabsTrigger value="repos">
-            <Folder className="w-4 h-4 mr-2" /> Repositories
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="w-4 h-4 mr-2" /> Settings
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              className="space-y-4"
-            >
-              <Card className="p-4 bg-background/80 backdrop-blur">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Zap className="w-5 h-5" /> Quick Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <ProgressCard label="Code Quality" value={75} />
-                  <ProgressCard label="Documentation" value={90} />
-                  <ProgressCard label="Test Coverage" value={65} />
-                </CardContent>
-              </Card>
-
-              <Card className="p-4 bg-background/80 backdrop-blur">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Info className="w-5 h-5" /> Highlights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Badge variant="secondary" className="mr-2 mb-2">
-                    {mostStarred?.name || "—"} ⭐ {mostStarred?.stars || 0}
-                  </Badge>
-                  <Badge variant="secondary" className="mr-2 mb-2">
-                    {repos.length} Repositories
-                  </Badge>
-                  <Badge variant="secondary" className="mr-2 mb-2">
-                    {totalForks} Forks
-                  </Badge>
-                </CardContent>
-              </Card>
-            </motion.div>
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" className="h-7 text-[11px] px-2.5 gap-1.5">
+              <History className="h-3 w-3" /> Logs
+            </Button>
+            <Button size="sm" className="h-7 text-[11px] px-2.5 gap-1.5 bg-primary hover:bg-primary/90">
+              <Zap className="h-3 w-3 fill-current" /> Global Scan
+            </Button>
           </div>
-        </TabsContent>
+        </header>
 
-        <TabsContent value="repos">
-          <Repo />
-        </TabsContent>
+        <Separator className="opacity-50" />
 
-        <TabsContent value="settings">
-          <Card className="p-4 bg-background/80 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" /> Preferences
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button variant="outline" className="w-full">
-                Change Theme
-              </Button>
-              <Button variant="outline" className="w-full">
-                Manage OAuth
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-/* ---------- COMPONENTS ---------- */
-
-function StatCard({ title, value, icon, small }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <Card className="group rounded-2xl border border-border bg-background/80 backdrop-blur hover:shadow-xl transition-all">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
-          <span className="text-muted-foreground group-hover:text-foreground transition text-lg">
-            {icon}
-          </span>
-        </CardHeader>
-        <CardContent>
-          <p className={`font-bold ${small ? "text-lg truncate" : "text-3xl"}`}>
-            {value}
-          </p>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-function ProgressCard({ label, value }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="flex justify-between items-center mb-1 cursor-pointer">
-          <span>{label}</span>
-          <span>{value}%</span>
+        {/* --- TIGHT STATS GRID --- */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <StatCard title="Total Repos" value={repos.length} icon={<Folder size={14} />} trend="+2" />
+          <StatCard title="Stars" value={totalStars} icon={<Star size={14} />} trend="+12%" />
+          <StatCard title="Forks" value={totalForks} icon={<GitBranch size={14} />} trend="+5" />
+          <StatCard title="Top Build" value={mostStarred?.name || "N/A"} icon={<TrendingUp size={14} />} isCompact />
         </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        Progress for <strong>{label}</strong>
-      </TooltipContent>
-      <Progress value={value} className="h-2 rounded-lg" />
-    </Tooltip>
+
+        {/* --- CONTENT TABS --- */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="h-8 bg-transparent p-0 gap-4 mb-4 border-b w-full justify-start rounded-none">
+            <TabsTrigger value="overview" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="repos" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+              Projects
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+              Config
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4 outline-none">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* SYSTEM INSIGHTS */}
+              <Card className="md:col-span-2 border-border/50 shadow-none">
+                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+                  <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Quality Metrics</CardTitle>
+                  <BarChart2 className="h-3.5 w-3.5 text-muted-foreground/50" />
+                </CardHeader>
+                <CardContent className="p-4 pt-2 grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <ProgressCard label="Logic" value={75} color="bg-blue-500" />
+                    <ProgressCard label="Docs" value={90} color="bg-emerald-500" />
+                    <ProgressCard label="Tests" value={65} color="bg-amber-500" />
+                  </div>
+                  <div className="flex flex-col items-center justify-center border-l border-dashed border-border pl-6">
+                    <div className="text-3xl font-black text-primary italic">A+</div>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Health Grade</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* ACTIVITY FEED */}
+              <Card className="border-border/50 shadow-none">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Latest Event</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <ScrollArea className="h-[105px]">
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((_, i) => (
+                        <div key={i} className="flex gap-2.5">
+                          <div className="h-1.5 w-1.5 mt-1 rounded-full bg-primary shrink-0" />
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] font-semibold leading-none truncate w-[140px]">Sync: {mostStarred?.name}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase font-medium">45m ago</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+
+            </div>
+          </TabsContent>
+
+          <TabsContent value="repos" className="outline-none">
+            <Repo />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+/* ---------- INTERNAL UI COMPONENTS (MINIFIED) ---------- */
+
+function StatCard({ title, value, icon, trend, isCompact }) {
+  return (
+    <Card className="border-border/40 shadow-none group hover:border-primary/50 transition-colors">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-tighter">{title}</p>
+          <div className="text-muted-foreground group-hover:text-primary transition-colors">{icon}</div>
+        </div>
+        <div className="flex items-end gap-2">
+          <div className={`font-bold tabular-nums ${isCompact ? "text-[13px] truncate" : "text-lg"}`}>
+            {value}
+          </div>
+          {trend && (
+            <span className="text-[9px] font-bold text-emerald-500 mb-0.5">{trend}</span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ProgressCard({ label, value, color }) {
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
+        <span className="text-muted-foreground/70">{label}</span>
+        <span>{value}%</span>
+      </div>
+      <Progress value={value} className={`h-1 ${color}`} />
+    </div>
   );
 }

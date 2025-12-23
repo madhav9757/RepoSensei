@@ -1,196 +1,89 @@
-AI-powered GitHub repository analyzer and code quality assistant.
+```markdown
+# React
 
-## Quick Start
+The library for web and native user interfaces.
 
-```bash
-# 1. Install dependencies
-npm install
+## Project Overview
 
-# 2. Create .env file
-cp .env.example .env
+React is a JavaScript library developed by Facebook for building user interfaces. It allows developers to create large web applications that can change data, without reloading the page. Its key feature is the ability to build reusable UI components that manage their own state.
 
-# 3. Add your GitHub token to .env
-# Get token: https://github.com/settings/tokens
+## Features
 
-# 4. Start server
-npm run dev
+- **Declarative**: React makes it easy to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes.
+- **Component-Based**: Build encapsulated components that manage their own state, then compose them to make complex UIs.
+- **Learn Once, Write Anywhere**: You can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using React Native.
+
+## Folder Structure
+
+```
+react/
+├── .codesandbox/
+│   └── ci.json
+├── compiler/
+│   ├── apps/
+│   │   └── playground/
+│   ├── docs/
+│   ├── packages/
+│   └── ...
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── MAINTAINERS
+├── README.md
+└── ...
 ```
 
-Server runs at: http://localhost:5000
+- **.codesandbox/**: Configuration files for CodeSandbox.
+- **compiler/**: Contains the core compiler logic and playground for testing.
+- **CHANGELOG.md**: A log of changes made to the project.
+- **CODE_OF_CONDUCT.md**: Guidelines for community interaction.
+- **CONTRIBUTING.md**: Instructions for contributing to the project.
 
-## API Endpoints
+## Installation
 
-### Health Check
+To get started with React, you can use npm or yarn to install it in your project:
+
 ```bash
-GET /api/health
+npm install react
 ```
 
-### Repositories
+or
+
 ```bash
-# Get user repos
-GET /api/repos?username=octocat
-
-# Get repo details
-GET /api/repos/:owner/:repo
-
-# Get repo structure
-GET /api/repos/:owner/:repo/structure
+yarn add react
 ```
 
-### Analysis
-```bash
-# Analyze by URL
-POST /api/analyze
-Body: { "repoUrl": "https://github.com/owner/repo" }
+## Usage
 
-# Analyze by owner/repo
-GET /api/analyze/:owner/:repo
-```
+To use React in your project, you can import it and start creating components:
 
-### Pull Requests
-```bash
-# Get all PRs
-GET /api/pr/:owner/:repo
+```javascript
+import React from 'react';
 
-# Get PRs by state
-GET /api/pr/:owner/:repo?state=open
+const App = () => {
+  return (
+    <div>
+      <h1>Hello, React!</h1>
+    </div>
+  );
+};
 
-# Get specific PR
-GET /api/pr/:owner/:repo/:number
+export default App;
 ```
 
 ## Environment Variables
 
-Required:
-- `GITHUB_PERSONAL_ACCESS_TOKEN` - GitHub API token
-- `JWT_SECRET` - JWT signing secret
+React can be configured using various environment variables. Here are some commonly used ones:
 
-Optional:
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment (development/production)
-- `FRONTEND_URL` - Frontend URL for CORS
+- `NODE_ENV`: Set to `development` or `production` to enable different behaviors in your application.
+- `REACT_APP_*`: Any variable prefixed with `REACT_APP_` will be accessible in your React application.
 
-## Project Structure
+## Future Improvements
 
+- **Performance Optimization**: Continuous improvements to the rendering engine for better performance.
+- **Enhanced Documentation**: Expanding the documentation to cover more use cases and advanced topics.
+- **New Features**: Exploring new features such as concurrent mode and suspense for data fetching.
+
+For more information, please refer to the [official documentation](https://reactjs.org/docs/getting-started.html).
 ```
-backend/
-├── src/
-│   ├── api/              # API routes & controllers
-│   ├── core/             # Core business logic
-│   │   ├── ai/           # AI services
-│   │   ├── analyze/      # Analysis logic
-│   │   ├── config/       # Configuration
-│   │   ├── github/       # GitHub client
-│   │   └── utils/        # Utilities
-│   ├── app.js            # Express app
-│   └── server.js         # Entry point
-├── .env                  # Environment variables
-└── package.json
-```
-
-## Development
-
-```bash
-# Start dev server with hot reload
-npm run dev
-
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-```
-
-## Testing
-
-```bash
-# Run API tests
-./test-api.sh
-
-# Or manually test
-curl http://localhost:5000/api/health
-```
-
-## Features
-
-- ✅ Repository structure analysis
-- ✅ Code quality scoring
-- ✅ Best practices detection
-- ✅ Pull request management
-- ✅ Intelligent recommendations
-- ⏳ AI-powered suggestions (coming soon)
-
-## Tech Stack
-
-- Node.js 18+
-- Express.js
-- Octokit (GitHub API)
-- JWT Authentication
-- Helmet & CORS Security
-
-## Error Handling
-
-All endpoints return consistent format:
-
-```json
-{
-  "error": "Error type",
-  "message": "Detailed message"
-}
-```
-
-Status codes:
-- 200 - Success
-- 400 - Bad Request
-- 404 - Not Found
-- 500 - Server Error
-
-## Rate Limiting
-
-- 100 requests per 15 minutes per IP
-- Configurable via environment variables
-
-## Security
-
-- Helmet.js security headers
-- CORS configuration
-- Rate limiting
-- JWT authentication
-- Environment variable protection
-
-## Troubleshooting
-
-**Port in use:**
-```bash
-lsof -ti:5000 | xargs kill -9
-```
-
-**GitHub rate limit:**
-Use Personal Access Token in .env
-
-**Module errors:**
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## Contributing
-
-1. Fork repository
-2. Create feature branch
-3. Make changes
-4. Test thoroughly
-5. Submit pull request
-
-## License
-
-MIT License
-
-## Support
-
-- Issues: GitHub Issues
-- Email: support@reposensei.com
-
----
-
-Made with ❤️ by RepoSensei Team

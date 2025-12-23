@@ -1,5 +1,20 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import useAuthStore from "@/store/authStore";
+import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
+import { 
+  Menu, 
+  X, 
+  Home, 
+  LayoutDashboard, 
+  LogOut, 
+  User, 
+  Settings, 
+  Github, 
+  Search 
+} from "lucide-react";
+
+// Shadcn Components
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -8,19 +23,23 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import clsx from "clsx";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+// Logic & Theme
+import useAuthStore from "@/store/authStore";
 import { ModeToggle } from "../ui/mode-toggle";
-import { Menu, X, Home, LayoutDashboard } from "lucide-react";
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const { user, loading, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -32,146 +51,175 @@ export default function Navbar() {
     }
   };
 
-  const navLinkClass = (path) =>
-    clsx(
-      "text-sm font-medium transition-all relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:bg-primary after:w-0 hover:after:w-full",
-      location.pathname === path
-        ? "text-primary after:w-full"
-        : "text-muted-foreground hover:text-foreground"
-    );
-
   const links = [
-    { label: "Home", path: "/", icon: <Home className="inline w-4 h-4 mr-1" /> },
-    ...(user ? [{ label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="inline w-4 h-4 mr-1" /> }] : []),
+    { label: "Home", path: "/", icon: Home },
+    ...(user ? [{ label: "Dashboard", path: "/dashboard", icon: LayoutDashboard }] : []),
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/70 backdrop-blur-lg shadow-sm">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        {/* Logo */}
-        <Link
-          to="/"
-          className="text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-transform hover:scale-105 hover:animate-pulse"
-        >
-          RepoSensei
-        </Link>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="container max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* LEFT: Logo & Desktop Nav */}
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:rotate-12">
+              <Github className="h-5 w-5" />
+            </div>
+            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+              RepoSensei
+            </span>
+          </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
-          {links.map((link) => (
-            <Link key={link.path} to={link.path} className={navLinkClass(link.path)}>
-              {link.icon}
-              {link.label}
-            </Link>
-          ))}
+          <nav className="hidden md:flex items-center gap-1">
+            {links.map((link) => {
+              const Icon = link.icon;
+              const isActive = location.pathname === link.path;
+              return (
+                <Button
+                  key={link.path}
+                  variant={isActive ? "secondary" : "ghost"}
+                  asChild
+                  className={cn(
+                    "relative h-9 px-4 transition-colors",
+                    isActive ? "text-primary font-semibold" : "text-muted-foreground"
+                  )}
+                >
+                  <Link to={link.path}>
+                    <Icon className="mr-2 h-4 w-4" />
+                    {link.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-active"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                      />
+                    )}
+                  </Link>
+                </Button>
+              );
+            })}
+          </nav>
+        </div>
 
-          {/* Mode Toggle */}
+        {/* RIGHT: Actions */}
+        <div className="flex items-center gap-2">
+          {/* Quick Search Hint (Visual Only) */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border rounded-md bg-muted/50 cursor-not-allowed opacity-70">
+            <Search className="h-3.5 w-3.5" />
+            <span>Search...</span>
+            <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </div>
+
           <ModeToggle />
-        </nav>
 
-        {/* Auth / Avatar */}
-        <div className="hidden md:flex items-center gap-4">
-          {loading && (
+          <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
+
+          {loading ? (
             <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-          )}
-
-          {!loading && !user && (
-            <motion.div whileHover={{ scale: 1.05 }}>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/login">Login</Link>
-              </Button>
-            </motion.div>
-          )}
-
-          {!loading && user && (
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <motion.div whileHover={{ scale: 1.05 }}>
-                  <Avatar className="cursor-pointer w-10 h-10">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                  <Avatar className="h-9 w-9 border">
                     <AvatarImage src={user.avatar} alt={user.username} />
-                    <AvatarFallback>{user.username?.[0]?.toUpperCase()}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/5">{user.username?.[0]}</AvatarFallback>
                   </Avatar>
-                </motion.div>
+                </Button>
               </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="w-52 motion-safe:animate-fadeIn"
-              >
-                <div className="px-4 py-2">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user.username}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Logged in</p>
-                </div>
-
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      github.com/{user.username}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-not-allowed opacity-70">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-not-allowed opacity-70">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-
-                <DropdownMenuItem
+                <DropdownMenuItem 
                   onClick={handleLogout}
-                  className="text-red-600 focus:text-red-600"
+                  className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
                 >
-                  Logout
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            <Button asChild size="sm" className="rounded-full px-5">
+              <Link to="/login">Login</Link>
+            </Button>
           )}
+
+          {/* MOBILE NAV (Sheet) */}
+          <div className="md:hidden">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader className="text-left">
+                  <SheetTitle className="flex items-center gap-2">
+                    <Github className="h-5 w-5" />
+                    RepoSensei
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 py-8">
+                  {links.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-lg text-lg font-medium transition-colors",
+                          location.pathname === link.path ? "bg-muted text-primary" : "text-muted-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                        {link.label}
+                        {location.pathname === link.path && (
+                          <Badge variant="outline" className="ml-auto">Active</Badge>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+                {user && (
+                  <div className="absolute bottom-8 left-6 right-6">
+                     <Button variant="destructive" className="w-full justify-start" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                     </Button>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-
-        {/* Mobile Hamburger */}
-        <button
-          className="md:hidden p-2 rounded hover:bg-muted/20 transition-colors"
-          onClick={() => setMobileOpen(!mobileOpen)}
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
       </div>
-
-      {/* Mobile Nav */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="md:hidden fixed top-16 left-0 bottom-0 w-64 bg-background border-r border-border shadow-lg z-40 flex flex-col p-6 gap-6"
-          >
-            {links.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={navLinkClass(link.path)}
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.icon}
-                {link.label}
-              </Link>
-            ))}
-
-            <ModeToggle />
-
-            {!user && (
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="mt-auto"
-              >
-                <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  Login
-                </Link>
-              </Button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   );
 }

@@ -1,9 +1,9 @@
-import { llm } from "./llm.client.js";
+import openai from "./llm.client.js"; // Changed from { llm } to openai
 import { README_PROMPT } from "./prompts.js";
 
 export const generateReadme = async (repoContext) => {
-  const response = await llm.chat.completions.create({
-    model: "gpt-4.1-mini",
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini", // Note: gpt-4.1-mini doesn't exist, changed to 4o-mini
     messages: [
       { role: "user", content: README_PROMPT(repoContext) }
     ],

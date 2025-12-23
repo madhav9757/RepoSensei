@@ -1,144 +1,62 @@
-import { Link } from "react-router-dom";
-import { Code2, Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Github, Twitter, Cpu } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="border-t bg-white dark:bg-gray-900 mt-auto">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-              <div className="size-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                <Code2 className="size-5 text-white" />
-              </div>
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                RepoSensei
-              </span>
-            </Link>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              AI-powered repository analysis to improve your code quality and productivity.
-            </p>
-            <div className="flex gap-3">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="size-9 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
-              >
-                <Github className="size-4" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="size-9 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
-              >
-                <Twitter className="size-4" />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="size-9 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition-colors"
-              >
-                <Linkedin className="size-4" />
-              </a>
-            </div>
-          </div>
-
-          {/* Product */}
-          <div>
-            <h3 className="font-semibold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>
-                <Link to="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Dashboard
-                </Link>
-              </li>
-              <li>
-                <a href="#features" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#docs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Documentation
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>
-                <a href="#about" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#blog" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#careers" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-              <li>
-                <a href="#privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="#terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#cookies" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Cookie Policy
-                </a>
-              </li>
-              <li>
-                <a href="#security" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                  Security
-                </a>
-              </li>
-            </ul>
+    <footer className="w-full border-t bg-background/50 backdrop-blur-sm">
+      <div className="container max-w-7xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8">
+        
+        {/* Left Side: Brand & Status */}
+        <div className="flex items-center gap-4">
+          <p className="text-sm font-medium text-muted-foreground">
+            © {new Date().getFullYear()} <span className="text-foreground">RepoSensei</span>
+          </p>
+          <Separator orientation="vertical" className="h-4 hidden sm:block" />
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+              Systems Operational
+            </span>
           </div>
         </div>
 
-        <div className="border-t mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <p>© {currentYear} RepoSensei. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <a href="mailto:hello@reposensei.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1">
-              <Mail className="size-4" />
-              Contact Us
-            </a>
+        {/* Right Side: Quick Links */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+             <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-mono font-medium opacity-60">
+               OSS
+             </Badge>
           </div>
+          
+          <nav className="flex items-center gap-3">
+            <a 
+              href="https://github.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Github className="h-4 w-4" />
+            </a>
+            <a 
+              href="https://twitter.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Twitter className="h-4 w-4" />
+            </a>
+            <Separator orientation="vertical" className="h-4" />
+            <a 
+              href="/privacy" 
+              className="text-xs font-medium text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+            >
+              Privacy
+            </a>
+          </nav>
         </div>
       </div>
     </footer>
