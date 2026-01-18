@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  Github, Star, GitBranch, Activity, Folder, BarChart2, Zap,
-  Settings, Info, TrendingUp, History, ArrowUpRight,
+  Star,
+  GitBranch,
+  Activity,
+  Folder,
+  BarChart3,
+  History,
+  ArrowUpRight,
+  ChevronRight,
+  Search,
+  Bell,
+  RefreshCw,
+  LayoutGrid,
+  Box,
+  Settings2,
 } from "lucide-react";
 
 import useAuthStore from "@/store/authStore";
@@ -18,8 +30,22 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 
 import Repo from "./repo/Repo";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
 
 export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
@@ -30,160 +56,242 @@ export default function Dashboard() {
     if (!user) fetchMe();
   }, [user, fetchMe]);
 
+  const stats = useMemo(() => {
+    const totalStars = repos.reduce((a, r) => a + r.stars, 0);
+    const totalForks = repos.reduce((a, r) => a + r.forks, 0);
+    const mostStarred = [...repos].sort((a, b) => b.stars - a.stars)[0];
+    return { totalStars, totalForks, mostStarred };
+  }, [repos]);
+
   if (!user) {
     return (
-      <div className="flex h-[60vh] w-full flex-col items-center justify-center gap-3">
-        <Activity className="h-8 w-8 animate-pulse text-primary" />
-        <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground">
-          Syncing Environment
-        </p>
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Activity className="h-6 w-6 text-muted-foreground animate-pulse" />
+          <p className="text-sm text-muted-foreground">Loading dashboard</p>
+        </div>
       </div>
     );
   }
 
-  const totalStars = repos.reduce((a, r) => a + r.stars, 0);
-  const totalForks = repos.reduce((a, r) => a + r.forks, 0);
-  const mostStarred = [...repos].sort((a, b) => b.stars - a.stars)[0];
-
   return (
-    <TooltipProvider>
-      <div className="mx-auto max-w-6xl space-y-5 pb-6 pt-2">
-        
-        {/* --- COMPACT HEADER --- */}
-        <header className="flex items-center justify-between">
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="h-4 text-[9px] uppercase font-bold px-1.5 rounded-sm">
-                Pro
-              </Badge>
-              <span className="text-[10px] text-muted-foreground tabular-nums">v2.4.0-stable</span>
-            </div>
-            <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
-              System Dashboard <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            </h1>
-          </motion.div>
+    <TooltipProvider delayDuration={200}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="min-h-screen bg-background"
+      >
+        <div className="container mx-auto max-w-7xl p-6 space-y-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <motion.div variants={itemVariants} className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="gap-1.5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  Live
+                </Badge>
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Monitor your repositories and activity
+              </p>
+            </motion.div>
 
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="sm" className="h-7 text-[11px] px-2.5 gap-1.5">
-              <History className="h-3 w-3" /> Logs
-            </Button>
-            <Button size="sm" className="h-7 text-[11px] px-2.5 gap-1.5 bg-primary hover:bg-primary/90">
-              <Zap className="h-3 w-3 fill-current" /> Global Scan
-            </Button>
+            <motion.div variants={itemVariants} className="flex items-center gap-2">
+              <Button variant="outline" size="icon">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button size="sm" className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Sync
+              </Button>
+            </motion.div>
           </div>
-        </header>
 
-        <Separator className="opacity-50" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Repositories"
+              value={repos.length}
+              icon={<Folder className="h-4 w-4 text-blue-500" />}
+              trend="+2.4%"
+              description="Total projects"
+            />
+            <StatCard
+              title="Stars"
+              value={stats.totalStars}
+              icon={<Star className="h-4 w-4 text-amber-500" />}
+              trend="+12%"
+              description="Total stars"
+            />
+            <StatCard
+              title="Forks"
+              value={stats.totalForks}
+              icon={<GitBranch className="h-4 w-4 text-indigo-500" />}
+              trend="+5"
+              description="Total forks"
+            />
+            <StatCard
+              title="Top Project"
+              value={stats.mostStarred?.name || "N/A"}
+              icon={<BarChart3 className="h-4 w-4 text-emerald-500" />}
+              isCompact
+              description="Most starred"
+            />
+          </div>
 
-        {/* --- TIGHT STATS GRID --- */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard title="Total Repos" value={repos.length} icon={<Folder size={14} />} trend="+2" />
-          <StatCard title="Stars" value={totalStars} icon={<Star size={14} />} trend="+12%" />
-          <StatCard title="Forks" value={totalForks} icon={<GitBranch size={14} />} trend="+5" />
-          <StatCard title="Top Build" value={mostStarred?.name || "N/A"} icon={<TrendingUp size={14} />} isCompact />
-        </div>
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="overview" className="gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="repos" className="gap-2">
+                <Box className="h-4 w-4" />
+                Repositories
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings2 className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+            </TabsList>
 
-        {/* --- CONTENT TABS --- */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="h-8 bg-transparent p-0 gap-4 mb-4 border-b w-full justify-start rounded-none">
-            <TabsTrigger value="overview" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="repos" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-              Projects
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="text-[11px] uppercase tracking-wider font-bold h-8 px-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-              Config
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 outline-none">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
-              {/* SYSTEM INSIGHTS */}
-              <Card className="md:col-span-2 border-border/50 shadow-none">
-                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Quality Metrics</CardTitle>
-                  <BarChart2 className="h-3.5 w-3.5 text-muted-foreground/50" />
-                </CardHeader>
-                <CardContent className="p-4 pt-2 grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <ProgressCard label="Logic" value={75} color="bg-blue-500" />
-                    <ProgressCard label="Docs" value={90} color="bg-emerald-500" />
-                    <ProgressCard label="Tests" value={65} color="bg-amber-500" />
-                  </div>
-                  <div className="flex flex-col items-center justify-center border-l border-dashed border-border pl-6">
-                    <div className="text-3xl font-black text-primary italic">A+</div>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase mt-1">Health Grade</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ACTIVITY FEED */}
-              <Card className="border-border/50 shadow-none">
-                <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-bold uppercase text-muted-foreground">Latest Event</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <ScrollArea className="h-[105px]">
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((_, i) => (
-                        <div key={i} className="flex gap-2.5">
-                          <div className="h-1.5 w-1.5 mt-1 rounded-full bg-primary shrink-0" />
-                          <div className="space-y-0.5">
-                            <p className="text-[11px] font-semibold leading-none truncate w-[140px]">Sync: {mostStarred?.name}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase font-medium">45m ago</p>
-                          </div>
-                        </div>
-                      ))}
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                      <CardTitle>Project Health</CardTitle>
+                      <CardDescription>Quality metrics overview</CardDescription>
                     </div>
-                  </ScrollArea>
+                    <Button variant="ghost" size="icon">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="grid gap-8 md:grid-cols-2">
+                    <div className="space-y-6">
+                      <ProgressMetric label="Code Quality" value={75} />
+                      <ProgressMetric label="Documentation" value={90} />
+                      <ProgressMetric label="Test Coverage" value={65} />
+                    </div>
+                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                      <div className="text-6xl font-bold text-primary">
+                        A+
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Overall Grade
+                      </p>
+                      <Separator className="my-4 w-16" />
+                      <p className="text-xs text-muted-foreground">
+                        Performance improved by{" "}
+                        <span className="font-semibold text-foreground">12%</span>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Latest repository events</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <ScrollArea className="h-[320px]">
+                      <div className="space-y-0">
+                        {[1, 2, 3, 4, 5, 6].map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-3 border-b px-6 py-3 transition-colors hover:bg-muted/50"
+                          >
+                            <div className="h-2 w-2 rounded-full bg-primary" />
+                            <div className="flex-1 space-y-1">
+                              <p className="text-sm font-medium leading-none">
+                                {stats.mostStarred?.name || "Repository"}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <History className="h-3 w-3" />
+                                {i * 15 + 5}m ago
+                              </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="repos" className="space-y-4">
+              <Card>
+                <CardContent className="p-4">
+                  <Repo />
                 </CardContent>
               </Card>
+            </TabsContent>
 
-            </div>
-          </TabsContent>
-
-          <TabsContent value="repos" className="outline-none">
-            <Repo />
-          </TabsContent>
-        </Tabs>
-      </div>
+            <TabsContent value="settings" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Settings</CardTitle>
+                  <CardDescription>Manage your preferences</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Settings content goes here
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </motion.div>
     </TooltipProvider>
   );
 }
 
-/* ---------- INTERNAL UI COMPONENTS (MINIFIED) ---------- */
-
-function StatCard({ title, value, icon, trend, isCompact }) {
+function StatCard({ title, value, icon, trend, description, isCompact = false }) {
   return (
-    <Card className="border-border/40 shadow-none group hover:border-primary/50 transition-colors">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[9px] font-black uppercase text-muted-foreground tracking-tighter">{title}</p>
-          <div className="text-muted-foreground group-hover:text-primary transition-colors">{icon}</div>
-        </div>
-        <div className="flex items-end gap-2">
-          <div className={`font-bold tabular-nums ${isCompact ? "text-[13px] truncate" : "text-lg"}`}>
-            {value}
+    <motion.div variants={itemVariants}>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">
+              {title}
+            </p>
+            <div className="rounded-md bg-muted p-2">
+              {icon}
+            </div>
           </div>
-          {trend && (
-            <span className="text-[9px] font-bold text-emerald-500 mb-0.5">{trend}</span>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          <div className="mt-3 flex items-baseline gap-2">
+            <div className={`font-semibold ${isCompact ? "text-xl truncate" : "text-2xl"}`}>
+              {value}
+            </div>
+            {trend && (
+              <Badge variant="secondary" className="text-xs">
+                {trend}
+              </Badge>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {description}
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
-function ProgressCard({ label, value, color }) {
+function ProgressMetric({ label, value }) {
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
-        <span className="text-muted-foreground/70">{label}</span>
-        <span>{value}%</span>
+    <div className="space-y-2">
+      <div className="flex justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{value}%</span>
       </div>
-      <Progress value={value} className={`h-1 ${color}`} />
+      <Progress value={value} />
     </div>
   );
 }

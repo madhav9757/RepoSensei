@@ -41,7 +41,7 @@ export default function RepoStructure({ owner = "madhav9757", repo = "portfolio"
   if (loading) return <RepoLoadingSkeleton />;
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="max-h-[74vh] flex flex-col bg-background overflow-hidden">
       {/* <RepoHeader owner={owner} repo={repo} /> */}
       <main className="flex-1 flex overflow-hidden">
         <RepoSidebar tree={tree} files={files} selectedFilePath={selectedFilePath} setSelectedFilePath={setSelectedFilePath} />
