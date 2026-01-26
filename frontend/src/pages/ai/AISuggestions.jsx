@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getSuggestions } from "@/api/suggestions";
+import useSuggestionsStore from "@/store/useSuggestionsStore";
 import {
   AlertTriangle,
   FileCode2,
@@ -17,6 +17,7 @@ import {
   RefreshCcw,
   GitCompare,
   ArrowUpRight,
+  Code2,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,34 +31,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import CodeDiffViewer from "@/components/ai/CodeDiffViewer";
 
 export default function RepoAISuggestions({ owner, repo }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [error, setError] = useState(null);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(null);
 
-  const fetchSuggestions = async () => {
-    if (!owner || !repo) return;
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await getSuggestions({
-        owner,
-        repo,
-        goal: "Improve code quality",
-      });
-      setSuggestions(res.suggestions || []);
-    } catch {
-      setError("Failed to synchronize AI insights.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use Zustand store
+  const {
+    suggestions,
+    loading,
+    error,
+    fetchSuggestions,
+    refreshSuggestions,
+    clearError
+  } = useSuggestionsStore();
 
   useEffect(() => {
-    fetchSuggestions();
-  }, [owner, repo]);
+    if (owner && repo) {
+      fetchSuggestions(owner, repo);
+    }
+  }, [owner, repo, fetchSuggestions]);
+
+  const handleRefresh = () => {
+    if (owner && repo) {
+      refreshSuggestions(owner, repo);
+    }
+  };
 
   if (loading) return <AISkeletonGrid />;
 
@@ -69,9 +69,9 @@ export default function RepoAISuggestions({ owner, repo }) {
         </div>
         <h3 className="text-sm font-bold uppercase tracking-tight text-destructive">Insight Sync Failed</h3>
         <p className="mt-1 text-xs text-muted-foreground/80">{error}</p>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={fetchSuggestions}
           className="mt-6 h-8 gap-2 border-destructive/20 text-destructive hover:bg-destructive/10"
         >
@@ -103,20 +103,29 @@ export default function RepoAISuggestions({ owner, repo }) {
               </Badge>
             </div>
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Terminal className="h-3 w-3" /> Technical Audit Report 
-              <span className="opacity-30">•</span> 
+              <Terminal className="h-3 w-3" /> Technical Audit Report
+              <span className="opacity-30">•</span>
               <span className="text-primary/70 font-mono italic">v1.4.2-stable</span>
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="h-8 gap-2 text-[11px] font-bold text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCcw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh Analysis
+          </Button>
           <Button variant="ghost" size="sm" className="h-8 text-[11px] font-bold text-muted-foreground hover:text-foreground">
             Archive All
           </Button>
           <Separator orientation="vertical" className="h-4" />
           <div className="flex h-8 items-center rounded-lg border border-border/50 bg-muted/30 px-3">
-             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Found: {suggestions.length}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Found: {suggestions.length}</span>
           </div>
         </div>
       </div>
@@ -153,9 +162,9 @@ export default function RepoAISuggestions({ owner, repo }) {
 
                       {/* Content Section */}
                       <div className="space-y-2">
-                         <h4 className="text-[13px] font-bold text-foreground/90 group-hover:text-foreground transition-colors">
-                           {item.type} Improvement Detected
-                         </h4>
+                        <h4 className="text-[13px] font-bold text-foreground/90 group-hover:text-foreground transition-colors">
+                          {item.type} Improvement Detected
+                        </h4>
                         <p className="text-[12.5px] leading-relaxed text-muted-foreground/90 transition-colors group-hover:text-foreground/80">
                           {item.suggestion}
                         </p>
@@ -166,25 +175,46 @@ export default function RepoAISuggestions({ owner, repo }) {
                     <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4">
                       <TypeBadge type={item.type} />
 
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => navigate(`/repo/${owner}/${repo}/structure?file=${item.file}`)}
-                              className="h-8 gap-2 rounded-lg bg-foreground text-[11px] font-bold text-background transition-all hover:bg-primary"
-                            >
-                              <GitCompare className="h-3.5 w-3.5" />
-                              Analyze Diff
-                              <ArrowUpRight className="h-3 w-3 opacity-50" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-foreground text-background text-[10px] font-bold uppercase tracking-wider">
-                            Compare original vs. proposed logic
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <div className="flex items-center gap-2">
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedSuggestion(item)}
+                                className="h-8 gap-2 rounded-lg text-[11px] font-bold transition-all hover:bg-primary hover:text-primary-foreground"
+                              >
+                                <Code2 className="h-3.5 w-3.5" />
+                                View Diff
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-foreground text-background text-[10px] font-bold uppercase tracking-wider">
+                              View code changes (GitHub-style)
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => navigate(`/repo/${owner}/${repo}/structure?file=${item.file}`)}
+                                className="h-8 gap-2 rounded-lg bg-foreground text-[11px] font-bold text-background transition-all hover:bg-primary"
+                              >
+                                <GitCompare className="h-3.5 w-3.5" />
+                                Go to File
+                                <ArrowUpRight className="h-3 w-3 opacity-50" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-foreground text-background text-[10px] font-bold uppercase tracking-wider">
+                              Navigate to file in repository
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </CardContent>
 
@@ -206,6 +236,16 @@ export default function RepoAISuggestions({ owner, repo }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Code Diff Viewer Modal */}
+      <AnimatePresence>
+        {selectedSuggestion && (
+          <CodeDiffViewer
+            suggestion={selectedSuggestion}
+            onClose={() => setSelectedSuggestion(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 }

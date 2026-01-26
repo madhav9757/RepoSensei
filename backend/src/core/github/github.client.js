@@ -61,25 +61,25 @@ export const getRepoTree = async (owner, repo) => {
       owner,
       repo,
     });
-    
+
     const defaultBranch = repoData.default_branch;
-    
+
     const { data: refData } = await octokit.rest.git.getRef({
       owner,
       repo,
       ref: `heads/${defaultBranch}`,
     });
-    
+
     const treeSha = refData.object.sha;
-    
+
     const { data: treeData } = await octokit.rest.git.getTree({
       owner,
       repo,
       tree_sha: treeSha,
       recursive: true,
     });
-    
-    return treeData.tree;
+
+    return { tree: treeData.tree, defaultBranch };
   } catch (error) {
     console.error(`Error fetching repo tree:`, error.message);
     throw error;
@@ -131,19 +131,20 @@ export const getRepoLanguages = async (owner, repo) => {
 };
 
 // Get file content
-export const getFileContent = async (owner, repo, path) => {
+export const getFileContent = async (owner, repo, path, ref) => {
   try {
     const { data } = await octokit.rest.repos.getContent({
       owner,
       repo,
       path,
+      ref,
     });
-    
+
     if (data.type === 'file' && data.content) {
       const content = Buffer.from(data.content, 'base64').toString('utf-8');
       return content;
     }
-    
+
     return null;
   } catch (error) {
     console.error(`Error fetching file content:`, error.message);

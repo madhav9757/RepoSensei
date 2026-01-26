@@ -14,5 +14,6 @@ app.listen(PORT, () => {
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('❌ Unhandled Promise Rejection:', err);
+  // eslint-disable-next-line no-process-exit
   process.exit(1);
 });

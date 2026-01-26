@@ -120,7 +120,42 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.3);
+}
+
+/* Utilities */
+.glass {
+  background: rgba(var(--background), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(var(--border), 0.5);
+}
+
+.text-gradient {
+  background: linear-gradient(to bottom right, hsl(var(--foreground)), hsl(var(--foreground) / 0.7));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

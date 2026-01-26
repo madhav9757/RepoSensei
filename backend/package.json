@@ -22,16 +22,20 @@
   "license": "MIT",
   "dependencies": {
     "@octokit/rest": "^20.0.0",
+    "@sentry/node": "^10.34.0",
     "axios": "^1.6.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csrf-csrf": "^4.0.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "openai": "^6.16.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

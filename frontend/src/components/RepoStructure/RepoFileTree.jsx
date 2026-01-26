@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { 
-  Folder, 
-  FolderOpen, 
-  File, 
-  ChevronDown, 
+import { useState, useEffect } from "react";
+import {
+  Folder,
+  FolderOpen,
+  File,
+  ChevronDown,
   ChevronRight,
   FileCode,
   FileJson,
@@ -20,10 +20,10 @@ import { cn } from "@/lib/utils";
  */
 const getFileIcon = (fileName, isSelected) => {
   const extension = fileName.split(".").pop()?.toLowerCase();
-  const iconProps = { 
-    size: 14, 
-    className: cn("mr-2.5 shrink-0 transition-colors", 
-      isSelected ? "text-primary" : "text-muted-foreground/60 group-hover:text-muted-foreground") 
+  const iconProps = {
+    size: 14,
+    className: cn("mr-2.5 shrink-0 transition-colors",
+      isSelected ? "text-primary" : "text-muted-foreground/60 group-hover:text-muted-foreground")
   };
 
   switch (extension) {
@@ -56,22 +56,89 @@ export default function RepoFileTree({
   level = 0,
 }) {
   const currentPath = path ? `${path}/${name}` : name;
-  const [open, setOpen] = useState(level < 1);
-  const isFolder = node && typeof node === "object";
-  const isSelected = selectedFilePath === currentPath;
 
-  // Search logic remains, but we ensure folders stay visible if they contain matches
-  if (search && !name.toLowerCase().includes(search.toLowerCase()) && !isFolder) {
+  const isSelected = selectedFilePath === currentPath;
+  const isFolder = node && typeof node === "object";
+
+  // Check if this folder contains the selected file
+  const containsSelectedFile = isFolder && selectedFilePath && selectedFilePath.startsWith(currentPath + "/");
+
+  // Helper to check if this node or any children match the search
+  const hasMatch = (n, term) => {
+    if (!term) return true;
+    // Check current node name (if it's a file or folder)
+    // NOTE: In this recursive structure, we don't have the name of *this* node easily available inside the recursion for children without passing it.
+    // Actually, 'name' prop is the name of THIS node.
+    // So we check our name.
+    if (name.toLowerCase().includes(term.toLowerCase())) return true;
+
+    // If folder, check children
+    if (n && typeof n === "object") {
+      return Object.keys(n).some(key => {
+        // We need to check if the child node has a match. 
+        // We can't easily reuse 'hasMatch' here because 'hasMatch' logic assumes it's 'name' + 'node'.
+        // Let's make a recursive static helper or use a simpler approach.
+
+        // Simpler recursive approach for children:
+        const childNode = n[key];
+        const childName = key;
+
+        // Check child name
+        if (childName.toLowerCase().includes(term.toLowerCase())) return true;
+
+        // Recurse if child is folder
+        if (childNode && typeof childNode === "object") {
+          // We need a standalone recursive function for the raw object tree
+          return checkTreeMatch(childNode, term);
+        }
+        return false;
+      });
+    }
+    return false;
+  };
+
+  // Standalone recursive helper for the object tree
+  function checkTreeMatch(treeNode, term) {
+    if (!treeNode || typeof treeNode !== 'object') return false;
+    return Object.keys(treeNode).some(key => {
+      if (key.toLowerCase().includes(term.toLowerCase())) return true;
+      return checkTreeMatch(treeNode[key], term);
+    });
+  }
+
+  const matchesInfo = hasMatch(node, search);
+
+  // If search is active and this node (or descendants) doesn't match, hide it.
+  if (search && !matchesInfo) {
     return null;
   }
+
+  // Auto-expand if search is active and we have matches inside (but we are not the direct match)
+  // i.e., I am a folder, and my name might NOT match, but my children DO match.
+  const childrenMatch = search && node && typeof node === 'object' && checkTreeMatch(node, search);
+
+  const [open, setOpen] = useState(level < 1 || containsSelectedFile);
+
+  useEffect(() => {
+    if (childrenMatch) {
+      setOpen(true);
+    }
+  }, [childrenMatch, search]);
+
+  // Auto-expand if the selected file is inside this folder
+  useEffect(() => {
+    if (containsSelectedFile) {
+      setOpen(true);
+    }
+  }, [containsSelectedFile]);
 
   return (
     <div className="w-full select-none">
       <div
         className={cn(
           "group flex items-center justify-between cursor-pointer rounded-md px-2 py-1.5 transition-all duration-200",
-          isSelected 
-            ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]" 
+          isSelected
+            ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]"
             : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
         )}
         onClick={() => (isFolder ? setOpen(!open) : setSelectedFilePath(currentPath))}

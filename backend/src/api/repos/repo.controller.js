@@ -1,47 +1,36 @@
-import { 
+import {
   getUserRepos as fetchUserRepos,
   getRepoDetails,
   getRepoTree,
-  getRepoLanguages 
+  getRepoLanguages,
+  getFileContent
 } from "../../core/github/github.client.js";
+import { catchAsync } from "../../core/utils/catchAsync.js";
+import AppError from "../../core/utils/AppError.js";
 
-export const getUserRepos = async (req, res) => {
-  try {
-    const { username, accessToken } = req.user;
+export const getUserRepos = catchAsync(async (req, res, next) => {
+  const { username, accessToken } = req.user;
 
-    if (!username || !accessToken) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const repos = await fetchUserRepos(username, accessToken);
-
-    res.json({
-      success: true,
-      count: repos.length,
-      data: repos,
-    });
-  } catch (error) {
-    console.error("getUserRepos error:", error);
-
-    res.status(500).json({
-      error: "Failed to fetch repositories",
-      message: error.response?.data?.message || error.message || "GitHub API error",
-    });
+  if (!username || !accessToken) {
+    return next(new AppError("Unauthorized - Missing user info", 401));
   }
-};
+
+  const repos = await fetchUserRepos(username, accessToken);
+
+  res.json({
+    success: true,
+    count: repos.length,
+    data: repos,
+  });
+});
 
 
-export const getRepoInfo = async (req, res) => {
+export const getRepoInfo = catchAsync(async (req, res, next) => {
+  const { owner, repo } = req.params;
+
+  console.log(`Fetching details for: ${owner}/${repo}`);
+
   try {
-    const { owner, repo } = req.params;
-    
-    if (!owner || !repo) {
-      return res.status(400).json({ 
-        error: "Owner and repo name are required"
-      });
-    }
-
-    console.log(`Fetching details for: ${owner}/${repo}`);
     const repoDetails = await getRepoDetails(owner, repo);
     const languages = await getRepoLanguages(owner, repo);
 
@@ -53,51 +42,57 @@ export const getRepoInfo = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error in getRepoInfo:', error);
-    
     if (error.status === 404) {
-      return res.status(404).json({ 
-        error: "Repository not found",
-        message: `Repository '${req.params.owner}/${req.params.repo}' does not exist`
-      });
+      return next(new AppError(`Repository '${owner}/${repo}' does not exist`, 404));
     }
-    
-    res.status(500).json({ 
-      error: "Failed to fetch repository details",
-      message: error.message
-    });
+    throw error; // Pass to catchAsync -> next
   }
-};
+});
 
-export const getRepoStructure = async (req, res) => {
+export const getRepoStructure = catchAsync(async (req, res, _next) => {
+  const { owner, repo } = req.params;
+
+  console.log(`Fetching structure for: ${owner}/${repo}`);
+  const { tree, defaultBranch } = await getRepoTree(owner, repo);
+
+  const structure = {
+    default_branch: defaultBranch,
+    files: tree.filter(item => item.type === 'blob'),
+    directories: tree.filter(item => item.type === 'tree'),
+    total_items: tree.length
+  };
+
+  res.json({
+    success: true,
+    data: structure
+  });
+});
+
+export const getRepoContent = catchAsync(async (req, res, next) => {
+  const { owner, repo } = req.params;
+  const { path, ref } = req.query;
+
+  if (!path) {
+    return next(new AppError("File path is required", 400));
+  }
+
+  console.log(`Fetching file content for: ${owner}/${repo}/${path} (ref: ${ref || 'default'})`);
+
   try {
-    const { owner, repo } = req.params;
-    
-    if (!owner || !repo) {
-      return res.status(400).json({ 
-        error: "Owner and repo name are required"
-      });
-    }
+    const content = await getFileContent(owner, repo, path, ref);
 
-    console.log(`Fetching structure for: ${owner}/${repo}`);
-    const tree = await getRepoTree(owner, repo);
-    
-    const structure = {
-      files: tree.filter(item => item.type === 'blob'),
-      directories: tree.filter(item => item.type === 'tree'),
-      total_items: tree.length
-    };
+    if (content === null) {
+      return next(new AppError("File not found or is not a text file", 404));
+    }
 
     res.json({
       success: true,
-      data: structure
+      data: content
     });
   } catch (error) {
-    console.error('Error in getRepoStructure:', error);
-    
-    res.status(500).json({ 
-      error: "Failed to fetch repository structure",
-      message: error.message
-    });
+    if (error.status === 404) {
+      return next(new AppError("File not found", 404));
+    }
+    throw error;
   }
-};
+});

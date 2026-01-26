@@ -4,13 +4,13 @@ import { ChevronRight, HomeIcon, LayoutDashboard, Github, Settings } from "lucid
 
 // Shadcn Components (Ensure these are installed)
 import { Separator } from "@/components/ui/separator";
-import { 
-  Breadcrumb, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbList, 
-  BreadcrumbPage, 
-  BreadcrumbSeparator 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 
 // Your Pages & Components
@@ -44,7 +44,7 @@ function Layout({ children }) {
         {/* Dynamic Breadcrumb Bar - Forcefully improving UX */}
         {pathSegments.length > 0 && (
           <div className="border-b bg-muted/30">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-2">
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
@@ -81,7 +81,7 @@ function Layout({ children }) {
         )}
 
         {/* Main Content Area with Entry Animation */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -118,7 +118,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      
+
       {/* Repo Scopes */}
       <Route
         path="/repo/:id"
