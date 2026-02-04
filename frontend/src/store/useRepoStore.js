@@ -6,6 +6,7 @@ const useRepoStore = create((set) => ({
   repos: [],
   selectedRepo: null,
   repoTree: [],
+  repoContext: null,
   suggestions: [],
   loading: false,
   error: "",
@@ -38,7 +39,7 @@ const useRepoStore = create((set) => ({
     set({ loading: true, error: "" });
     try {
       const res = await api.get(`/repo/${owner}/${repo}/structure`);
-      set({ repoTree: res.data.data });
+      set({ repoTree: res.data.data, repoContext: { owner, repo } });
     } catch (err) {
       set({ error: err.response?.data?.message || err.message });
     } finally {
@@ -47,7 +48,7 @@ const useRepoStore = create((set) => ({
   },
 
   clearRepoData: () =>
-    set({ selectedRepo: null, repoTree: [], suggestions: [], error: "" }),
+    set({ selectedRepo: null, repoTree: [], repoContext: null, suggestions: [], error: "" }),
 }));
 
 export default useRepoStore;

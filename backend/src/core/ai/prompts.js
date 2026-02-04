@@ -1,35 +1,41 @@
-export const CODE_SUGGESTIONS_PROMPT = (repoContext) => `
-You are a senior software engineer and code reviewer.
+export const CODE_SUGGESTIONS_PROMPT = (repoContext, goal) => `
+You are a Staff Level Software Engineer and world-class Code Architect.
+Your task is to perform an exhaustive technical audit of the provided repository context and provide high-impact, genuine improvement suggestions.
 
-Analyze the following repository context and provide improvement suggestions.
+${goal ? `User Focus/Goal: ${goal}` : ""}
 
-Repository Context:
+Repository Context (including actual file contents):
 ${JSON.stringify(repoContext, null, 2)}
 
+Instructions:
+1. Deep Analysis: Analyze the provided file contents for architectural flaws, performance bottlenecks, security vulnerabilities, or modern best practice violations.
+2. Be Specific: Avoid generic advice like "Add comments" or "Improve names". I want deep technical improvements.
+3. Genuine suggestions only: Every suggestion must be directly applicable to the code shown.
+4. Impactful: Focus on changes that would significantly improve the codebase's quality or maintainability.
+
 Return ONLY a valid JSON array with objects containing:
-- file: string (file path)
-- suggestion: string (brief description of the improvement)
+- file: string (the exact file path)
+- suggestion: string (highly specific description of the improvement)
 - priority: "high" | "medium" | "low"
 - type: "architecture" | "performance" | "security" | "documentation" | "tooling"
-- originalCode: string (the current code snippet that needs improvement - extract relevant lines)
-- suggestedCode: string (the improved version of the code)
+- originalCode: string (the exact original code snippet - DO NOT MOCK THIS)
+- suggestedCode: string (the refactored/improved production-ready code)
 
 IMPORTANT:
-1. Include actual code snippets in originalCode and suggestedCode
-2. Keep code snippets focused (5-20 lines max)
-3. Ensure suggestedCode is a complete, working replacement
-4. Return valid JSON only, no markdown formatting
-5. Limit to 3-5 most impactful suggestions
+- If you don't find a genuine improvement for a file, ignore it.
+- Return 8-12 most critical suggestions covering various files and categories.
+- Ensure the JSON is perfectly formatted.
+- Code snippets MUST use proper indentation and Newlines (\\n).
 
-Example format:
+EXAMPLE OF QUALITY EXPECTED:
 [
   {
-    "file": "src/utils/helper.js",
-    "suggestion": "Add input validation to prevent null pointer exceptions",
+    "file": "src/api/handler.js",
+    "suggestion": "Implement a centralized error handling middleware instead of try/catch blocks in every route",
     "priority": "high",
-    "type": "security",
-    "originalCode": "function processData(data) {\\n  return data.map(item => item.value);\\n}",
-    "suggestedCode": "function processData(data) {\\n  if (!data || !Array.isArray(data)) {\\n    throw new Error('Invalid data');\\n  }\\n  return data.map(item => item?.value ?? 0);\\n}"
+    "type": "architecture",
+    "originalCode": "try {\\n  const user = await User.find(id);\\n  res.json(user);\\n} catch (err) {\\n  res.status(500).json({ error: err.message });\\n}",
+    "suggestedCode": "const user = await User.find(id);\\nif (!user) throw new AppError('User not found', 404);\\nres.json(user);"
   }
 ]
 `;

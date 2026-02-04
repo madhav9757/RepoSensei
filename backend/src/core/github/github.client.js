@@ -54,17 +54,30 @@ export const getRepoContent = async (owner, repo, path = '') => {
   }
 };
 
+// Helper to get octokit instance
+const getOctokit = (token) => {
+  if (token) {
+    return new Octokit({
+      auth: token,
+      userAgent: 'RepoSensei v1.0',
+      timeZone: 'UTC',
+    });
+  }
+  return octokit;
+};
+
 // Get repository tree
-export const getRepoTree = async (owner, repo) => {
+export const getRepoTree = async (owner, repo, token) => {
   try {
-    const { data: repoData } = await octokit.rest.repos.get({
+    const client = getOctokit(token);
+    const { data: repoData } = await client.rest.repos.get({
       owner,
       repo,
     });
 
     const defaultBranch = repoData.default_branch;
 
-    const { data: refData } = await octokit.rest.git.getRef({
+    const { data: refData } = await client.rest.git.getRef({
       owner,
       repo,
       ref: `heads/${defaultBranch}`,
@@ -72,7 +85,7 @@ export const getRepoTree = async (owner, repo) => {
 
     const treeSha = refData.object.sha;
 
-    const { data: treeData } = await octokit.rest.git.getTree({
+    const { data: treeData } = await client.rest.git.getTree({
       owner,
       repo,
       tree_sha: treeSha,
@@ -87,9 +100,10 @@ export const getRepoTree = async (owner, repo) => {
 };
 
 // Get repository details
-export const getRepoDetails = async (owner, repo) => {
+export const getRepoDetails = async (owner, repo, token) => {
   try {
-    const { data } = await octokit.rest.repos.get({
+    const client = getOctokit(token);
+    const { data } = await client.rest.repos.get({
       owner,
       repo,
     });
@@ -101,9 +115,10 @@ export const getRepoDetails = async (owner, repo) => {
 };
 
 // Get pull requests
-export const getRepoPullRequests = async (owner, repo, state = 'all') => {
+export const getRepoPullRequests = async (owner, repo, state = 'all', token) => {
   try {
-    const { data } = await octokit.rest.pulls.list({
+    const client = getOctokit(token);
+    const { data } = await client.rest.pulls.list({
       owner,
       repo,
       state,
@@ -117,9 +132,10 @@ export const getRepoPullRequests = async (owner, repo, state = 'all') => {
 };
 
 // Get repository languages
-export const getRepoLanguages = async (owner, repo) => {
+export const getRepoLanguages = async (owner, repo, token) => {
   try {
-    const { data } = await octokit.rest.repos.listLanguages({
+    const client = getOctokit(token);
+    const { data } = await client.rest.repos.listLanguages({
       owner,
       repo,
     });
@@ -131,9 +147,10 @@ export const getRepoLanguages = async (owner, repo) => {
 };
 
 // Get file content
-export const getFileContent = async (owner, repo, path, ref) => {
+export const getFileContent = async (owner, repo, path, ref, token) => {
   try {
-    const { data } = await octokit.rest.repos.getContent({
+    const client = getOctokit(token);
+    const { data } = await client.rest.repos.getContent({
       owner,
       repo,
       path,

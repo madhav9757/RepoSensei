@@ -8,6 +8,7 @@ import { getAICodeSuggestions } from "../../core/ai/ai.suggestions.js";
 export const generateSuggestions = async (req, res) => {
   try {
     const { owner, repo, goal } = req.body;
+    const { accessToken } = req.user;
 
     // Validation
     if (!owner || !repo) {
@@ -18,8 +19,8 @@ export const generateSuggestions = async (req, res) => {
     }
 
     // 1️⃣ Build repo context
-    // FIX: Pass (owner, repo) as separate arguments to match repo.context.js
-    const repoContext = await buildRepoContext(owner, repo);
+    // FIX: Pass (owner, repo, accessToken)
+    const repoContext = await buildRepoContext(owner, repo, accessToken);
 
     if (!repoContext || !repoContext.files || repoContext.files.length === 0) {
       return res.status(404).json({
@@ -30,10 +31,10 @@ export const generateSuggestions = async (req, res) => {
 
     // 2️⃣ Call LLM for suggestions
     // Pass the context and goal to the service
-    const suggestions = await getAICodeSuggestions({
+    const suggestions = await getAICodeSuggestions(
       repoContext,
-      goal: goal || "General code improvement",
-    });
+      goal || "General technical audit and code quality improvement"
+    );
 
     // 3️⃣ Send response
     return res.status(200).json({

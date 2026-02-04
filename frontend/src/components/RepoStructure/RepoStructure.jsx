@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 
 export default function RepoStructure() {
   const { owner, repo } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialFile = searchParams.get("file");
 
-  const { repoTree, fetchRepoStructure, loading, error, selectedRepo } = useRepoStore();
+  const { repoTree, fetchRepoStructure, loading, error, selectedRepo, repoContext } = useRepoStore();
 
   const [tree, setTree] = useState({});
   const [selectedFilePath, setSelectedFilePath] = useState(initialFile);
@@ -26,9 +26,8 @@ export default function RepoStructure() {
   }, [owner, repo, fetchRepoStructure]);
 
   useEffect(() => {
-    if (initialFile) {
-      setSelectedFilePath(initialFile);
-    }
+    console.log("RepoStructure: URL changed. initialFile:", initialFile);
+    setSelectedFilePath(initialFile || null);
   }, [initialFile]);
 
   useEffect(() => {
@@ -50,7 +49,9 @@ export default function RepoStructure() {
     }
   }, [repoTree]);
 
-  if (loading) return <RepoLoadingSkeleton />;
+  const isContextMismatch = !repoContext || repoContext.owner !== owner || repoContext.repo !== repo;
+
+  if (loading || isContextMismatch || !repoTree?.default_branch) return <RepoLoadingSkeleton />;
 
   if (error) {
     return (
@@ -77,7 +78,15 @@ export default function RepoStructure() {
         <RepoSidebar
           tree={tree}
           selectedFilePath={selectedFilePath}
-          setSelectedFilePath={setSelectedFilePath}
+          setSelectedFilePath={(path) => {
+            console.log("RepoStructure: Manual selection:", path);
+            setSelectedFilePath(path);
+            setSearchParams((prev) => {
+              const newParams = new URLSearchParams(prev);
+              newParams.set("file", path);
+              return newParams;
+            });
+          }}
         />
         <FileViewer
           owner={owner}

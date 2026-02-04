@@ -27,12 +27,13 @@ export const getUserRepos = catchAsync(async (req, res, next) => {
 
 export const getRepoInfo = catchAsync(async (req, res, next) => {
   const { owner, repo } = req.params;
+  const { accessToken } = req.user;
 
   console.log(`Fetching details for: ${owner}/${repo}`);
 
   try {
-    const repoDetails = await getRepoDetails(owner, repo);
-    const languages = await getRepoLanguages(owner, repo);
+    const repoDetails = await getRepoDetails(owner, repo, accessToken);
+    const languages = await getRepoLanguages(owner, repo, accessToken);
 
     res.json({
       success: true,
@@ -51,9 +52,10 @@ export const getRepoInfo = catchAsync(async (req, res, next) => {
 
 export const getRepoStructure = catchAsync(async (req, res, _next) => {
   const { owner, repo } = req.params;
+  const { accessToken } = req.user;
 
   console.log(`Fetching structure for: ${owner}/${repo}`);
-  const { tree, defaultBranch } = await getRepoTree(owner, repo);
+  const { tree, defaultBranch } = await getRepoTree(owner, repo, accessToken);
 
   const structure = {
     default_branch: defaultBranch,
@@ -71,15 +73,18 @@ export const getRepoStructure = catchAsync(async (req, res, _next) => {
 export const getRepoContent = catchAsync(async (req, res, next) => {
   const { owner, repo } = req.params;
   const { path, ref } = req.query;
+  const { accessToken } = req.user;
 
   if (!path) {
     return next(new AppError("File path is required", 400));
   }
 
-  console.log(`Fetching file content for: ${owner}/${repo}/${path} (ref: ${ref || 'default'})`);
+  const cleanPath = (path.startsWith('/') ? path.slice(1) : path).trim();
+
+  console.log(`Fetching file content for: ${owner}/${repo}/${cleanPath} (ref: ${ref || 'default'})`);
 
   try {
-    const content = await getFileContent(owner, repo, path, ref);
+    const content = await getFileContent(owner, repo, cleanPath, ref, accessToken);
 
     if (content === null) {
       return next(new AppError("File not found or is not a text file", 404));
@@ -91,7 +96,7 @@ export const getRepoContent = catchAsync(async (req, res, next) => {
     });
   } catch (error) {
     if (error.status === 404) {
-      return next(new AppError("File not found", 404));
+      return next(new AppError(`File not found: ${cleanPath} (Branch: ${ref || 'default'}). Ensure file exists and you have access.`, 404));
     }
     throw error;
   }

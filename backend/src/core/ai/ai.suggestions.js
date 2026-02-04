@@ -8,60 +8,69 @@ const MODELS = {
 };
 
 // Mock suggestions for testing when API is unavailable
-const MOCK_SUGGESTIONS = [
-  {
-    file: "src/utils/helper.js",
-    suggestion: "Add input validation to prevent null pointer exceptions",
-    priority: "high",
-    type: "security",
-    originalCode: `function processData(data) {
-  return data.map(item => item.value);
-}`,
-    suggestedCode: `function processData(data) {
-  if (!data || !Array.isArray(data)) {
-    throw new Error('Invalid data: expected array');
-  }
-  return data.map(item => item?.value ?? 0);
-}`,
-  },
-  {
-    file: "src/components/Dashboard.jsx",
-    suggestion: "Optimize React component with useMemo to prevent unnecessary re-renders",
-    priority: "medium",
-    type: "performance",
-    originalCode: `const filteredData = data.filter(item => item.active);
-return <List items={filteredData} />;`,
-    suggestedCode: `const filteredData = useMemo(
-  () => data.filter(item => item.active),
-  [data]
-);
-return <List items={filteredData} />;`,
-  },
-  {
-    file: "README.md",
-    suggestion: "Add installation and setup instructions",
-    priority: "low",
-    type: "documentation",
-    originalCode: `# My Project
+const getMockSuggestions = (repoContext) => {
+  const repoName = repoContext?.name || "this repository";
+  const mainLang = repoContext?.language || "javascript";
 
-A cool project.`,
-    suggestedCode: `# My Project
-
-A cool project.
-
-## Installation
-
-\`\`\`bash
-npm install
-\`\`\`
-
-## Setup
-
-1. Copy \`.env.example\` to \`.env\`
-2. Configure your environment variables
-3. Run \`npm run dev\``,
-  },
-];
+  return [
+    {
+      file: repoContext?.files?.[0]?.path || "index.js",
+      suggestion: `Enhance ${mainLang} error handling and input validation in ${repoName}`,
+      priority: "high",
+      type: "security",
+      originalCode: `function processData(data) {\n  return data.map(item => item.value);\n}`,
+      suggestedCode: `function processData(data) {\n  if (!data || !Array.isArray(data)) {\n    throw new Error('Invalid data: expected array');\n  }\n  return data.map(item => item?.value ?? 0);\n}`,
+    },
+    {
+      file: repoContext?.files?.[1]?.path || "src/api/server.js",
+      suggestion: `Implement rate limiting and security headers in ${repoName} backend`,
+      priority: "high",
+      type: "security",
+      originalCode: `app.use(express.json());`,
+      suggestedCode: `import helmet from 'helmet';\nimport rateLimit from 'express-rate-limit';\n\napp.use(helmet());\napp.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));\napp.use(express.json());`,
+    },
+    {
+      file: repoContext?.files?.[2]?.path || "src/components/Dashboard.jsx",
+      suggestion: `Optimize ${mainLang} performance by implementing caching for ${repoName} data`,
+      priority: "medium",
+      type: "performance",
+      originalCode: `const filteredData = data.filter(item => item.active);\nreturn <List items={filteredData} />;`,
+      suggestedCode: `const filteredData = useMemo(\n  () => data.filter(item => item.active),\n  [data]\n);\nreturn <List items={filteredData} />;`,
+    },
+    {
+      file: repoContext?.files?.[3]?.path || "src/utils/helper.js",
+      suggestion: `Replace heavy lodash imports with native ${mainLang} methods`,
+      priority: "medium",
+      type: "performance",
+      originalCode: `import { cloneDeep } from 'lodash';\nconst newObj = cloneDeep(oldObj);`,
+      suggestedCode: `const newObj = structuredClone(oldObj);`,
+    },
+    {
+      file: "package.json",
+      suggestion: `Update vulnerable dependencies in ${repoName} manifest`,
+      priority: "high",
+      type: "security",
+      originalCode: `"dependencies": {\n  "axios": "^0.21.1"\n}`,
+      suggestedCode: `"dependencies": {\n  "axios": "^1.6.0"\n}`,
+    },
+    {
+      file: "src/db/connection.js",
+      suggestion: `Refactor database connection logic to use a singleton pattern`,
+      priority: "medium",
+      type: "architecture",
+      originalCode: `export const connect = async () => {\n  const client = await MongoClient.connect(url);\n  return client.db();\n};`,
+      suggestedCode: `let db = null;\nexport const getDb = async () => {\n  if (!db) {\n    const client = await MongoClient.connect(url);\n    db = client.db();\n  }\n  return db;\n};`,
+    },
+    {
+      file: "README.md",
+      suggestion: `Update project documentation for ${repoName}`,
+      priority: "low",
+      type: "documentation",
+      originalCode: `# ${repoName}\n  \n  A cool project.`,
+      suggestedCode: `# ${repoName}\n  \n  A cool project.\n  \n  ## Installation\n  \n  \`\`\`bash\n  npm install\n  \`\`\`\n  \n  ## Setup\n  \n  1. Copy \`.env.example\` to \`.env\`\n  2. Configure your environment variables\n  3. Run \`npm run dev\``,
+    },
+  ];
+};
 
 /**
  * Call AI with automatic fallback to free model
@@ -113,20 +122,24 @@ async function callAIWithFallback(messages, temperature = 0.1, maxTokens = 3000)
         return null;
       }
 
-      throw new Error(`Both AI models failed. Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`);
+      throw new Error(
+        `Both AI models failed. Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`
+      );
     }
   }
 }
 
-export const getAICodeSuggestions = async (repoContext) => {
-  const response = await callAIWithFallback([
-    { role: "user", content: CODE_SUGGESTIONS_PROMPT(repoContext) }
-  ], 0.1, 3000);
+export const getAICodeSuggestions = async (repoContext, goal) => {
+  const response = await callAIWithFallback(
+    [{ role: "user", content: CODE_SUGGESTIONS_PROMPT(repoContext, goal) }],
+    0.1,
+    3000
+  );
 
   // If response is null, use mock data
   if (!response) {
     console.log("📋 Returning mock suggestions (API key invalid)");
-    return MOCK_SUGGESTIONS;
+    return getMockSuggestions(repoContext);
   }
 
   let output = response.choices[0].message.content.trim();
@@ -141,7 +154,7 @@ export const getAICodeSuggestions = async (repoContext) => {
 
     // Ensure each suggestion has the required fields for diff viewing
     if (Array.isArray(parsed)) {
-      return parsed.map(suggestion => ({
+      return parsed.map((suggestion) => ({
         ...suggestion,
         originalCode: suggestion.originalCode || "",
         suggestedCode: suggestion.suggestedCode || suggestion.suggestion || "",
@@ -152,16 +165,18 @@ export const getAICodeSuggestions = async (repoContext) => {
   } catch (err) {
     console.error("❌ Failed to parse AI output:", output);
     console.log("📋 Returning mock suggestions as fallback");
-    return MOCK_SUGGESTIONS;
+    return getMockSuggestions(repoContext);
   }
 };
 
 export const analyzeCodeSnippet = async (fileName, code) => {
   const { FILE_ANALYSIS_PROMPT } = await import("./prompts.js");
 
-  const response = await callAIWithFallback([
-    { role: "user", content: FILE_ANALYSIS_PROMPT(fileName, code) }
-  ], 0.1, 2000);
+  const response = await callAIWithFallback(
+    [{ role: "user", content: FILE_ANALYSIS_PROMPT(fileName, code) }],
+    0.1,
+    2000
+  );
 
   if (!response) {
     return [
@@ -171,8 +186,8 @@ export const analyzeCodeSnippet = async (fileName, code) => {
         priority: "medium",
         description: "The current error handling is generic. Consider adding specific error types.",
         originalCode: "// Error handling code",
-        suggestedCode: "// Improved error handling"
-      }
+        suggestedCode: "// Improved error handling",
+      },
     ]; // Simple mock fallback
   }
 
